@@ -1,0 +1,26 @@
+{
+  "name": "mitecnica/crm-frontend",
+  "description": "Mi Tecnica CRM — PHP server-side frontend",
+  "type": "project",
+  "license": "proprietary",
+  "require": {
+    "php": ">=8.1"
+  },
+  "autoload": {
+    "files": [
+      "config/env.php",
+      "config/app.php",
+      "app/helpers/url.php",
+      "app/helpers/session.php",
+      "app/helpers/csrf.php",
+      "app/helpers/flash.php",
+      "app/helpers/format.php",
+      "app/helpers/permissions.php",
+      "app/helpers/api_client.php",
+      "app/helpers/auth.php"
+    ]
+  },
+  "config": {
+    "sort-packages": true
+  }
+}

@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Environment
+.env
+.env.local
+*.env
+!*.env.example
+
+# Logs
+*.log
+logs/
+crm/storage/logs/*
+!crm/storage/logs/.gitkeep
+
+# Build artifacts
+dist/
+build/
+crm/public/assets/css/output.css.map
+
+# Storage
+crm/storage/cache/*
+!crm/storage/cache/.gitkeep
+crm/storage/tmp/*
+!crm/storage/tmp/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# PM2
+.pm2/
+
+# Composer
+composer.lock

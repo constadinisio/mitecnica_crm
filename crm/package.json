@@ -1,0 +1,13 @@
+{
+  "name": "mi-tecnica-crm-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mi Tecnica CRM — PHP frontend (Tailwind build only; the runtime is PHP)",
+  "scripts": {
+    "build:css": "tailwindcss -c tailwind.config.js -i ./public/assets/css/input.css -o ./public/assets/css/output.css --minify",
+    "watch:css": "tailwindcss -c tailwind.config.js -i ./public/assets/css/input.css -o ./public/assets/css/output.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.10"
+  }
+}

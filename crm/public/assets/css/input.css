@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { color-scheme: dark; }
+  body { font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif; }
+}
+
+@layer components {
+  .card   { @apply bg-slate-900/70 border border-slate-800/70 rounded-2xl shadow-soft; }
+  .btn    { @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-brand-500/40; }
+  .btn-primary   { @apply btn bg-brand-500 hover:bg-brand-400 text-white; }
+  .btn-secondary { @apply btn bg-slate-800/70 hover:bg-slate-800 text-slate-100 border border-slate-700; }
+  .btn-ghost     { @apply btn bg-transparent hover:bg-slate-800/60 text-slate-300; }
+  .input  { @apply block w-full rounded-lg bg-slate-900/60 border border-slate-800 text-sm text-slate-100 placeholder:text-slate-500 focus:border-brand-500 focus:ring-1 focus:ring-brand-500/40 outline-none px-3 h-10; }
+  .input-error { @apply border-rose-500/70 focus:border-rose-500 focus:ring-rose-500/30; }
+  .data-table   { @apply w-full text-sm; }
+  .data-table th { @apply bg-slate-950/60 text-left text-xs uppercase tracking-wider text-slate-400 font-medium px-4 py-3 border-b border-slate-800; }
+  .data-table td { @apply px-4 py-3 border-b border-slate-800/70 text-slate-200 align-middle; }
+  .badge-green  { @apply bg-emerald-500/10 text-emerald-200 border border-emerald-500/30; }
+  .badge-amber  { @apply bg-amber-500/10 text-amber-200 border border-amber-500/30; }
+  .badge-blue   { @apply bg-brand-500/10 text-brand-200 border border-brand-500/30; }
+  .badge-rose   { @apply bg-rose-500/10 text-rose-200 border border-rose-500/30; }
+  .badge-red    { @apply bg-red-500/10 text-red-200 border border-red-500/30; }
+  .badge-slate  { @apply bg-slate-500/10 text-slate-200 border border-slate-500/30; }
+}
