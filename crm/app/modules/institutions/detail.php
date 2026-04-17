@@ -21,11 +21,32 @@ if (!$institution) { http_response_code(404); echo 'Not found'; return; }
 
 $activeTab = $_GET['tab'] ?? 'general';
 $tabs = [
-  'general'    => 'General',
-  'commercial' => 'Comercial',
-  'domains'    => 'Dominios',
-  'audit'      => 'Auditoría',
+  'general'      => 'General',
+  'license'      => 'Licencia',
+  'modules'      => 'Módulos',
+  'subscription' => 'Suscripción',
+  'payments'     => 'Pagos',
+  'domains'      => 'Dominios',
+  'audit'        => 'Auditoría',
 ];
+
+$license = null;
+$effectiveModules = null;
+$institutionPayments = [];
+if (in_array($activeTab, ['license', 'modules', 'subscription', 'payments'], true)) {
+    try {
+        if ($activeTab === 'modules') {
+            $effectiveModules = api_get("/institutions/$id/modules-effective")['data'] ?? null;
+        } else {
+            $license = api_get("/institutions/$id/license-summary")['data'] ?? null;
+            if ($activeTab === 'payments' && isset($license['recent_payments'])) {
+                $institutionPayments = $license['recent_payments'];
+            }
+        }
+    } catch (ApiClientException $e) {
+        flash_set('error', 'No se pudo cargar la información de licencia: ' . $e->getMessage());
+    }
+}
 
 ob_start();
 ?>
@@ -84,10 +105,13 @@ ob_start();
     <?php endforeach; ?>
   </div>
   <div class="p-6">
-    <?php if ($activeTab === 'general'):    include __DIR__ . '/partials/tabs_general.php';    endif; ?>
-    <?php if ($activeTab === 'commercial'): include __DIR__ . '/partials/tabs_commercial.php'; endif; ?>
-    <?php if ($activeTab === 'domains'):    include __DIR__ . '/partials/tabs_domains.php';    endif; ?>
-    <?php if ($activeTab === 'audit'):      include __DIR__ . '/partials/tabs_audit.php';      endif; ?>
+    <?php if ($activeTab === 'general'):      include __DIR__ . '/partials/tabs_general.php';      endif; ?>
+    <?php if ($activeTab === 'license'):      include __DIR__ . '/partials/tabs_license.php';      endif; ?>
+    <?php if ($activeTab === 'modules'):      include __DIR__ . '/partials/tabs_modules.php';      endif; ?>
+    <?php if ($activeTab === 'subscription'): include __DIR__ . '/partials/tabs_subscription.php'; endif; ?>
+    <?php if ($activeTab === 'payments'):     include __DIR__ . '/partials/tabs_payments.php';     endif; ?>
+    <?php if ($activeTab === 'domains'):      include __DIR__ . '/partials/tabs_domains.php';      endif; ?>
+    <?php if ($activeTab === 'audit'):        include __DIR__ . '/partials/tabs_audit.php';        endif; ?>
   </div>
 </div>
 

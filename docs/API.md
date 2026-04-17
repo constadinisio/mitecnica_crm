@@ -278,6 +278,122 @@ Retorna:
 
 ---
 
+## Institution licence & module overrides (Fase 2B)
+
+Capa que combina plan activo + overrides manuales por institución. El plan activo se resuelve por la única suscripción **viva** (`trial`/`active`); si no la hay, el plan es `null` y todos los módulos sin override quedan deshabilitados.
+
+### `GET /api/v1/institutions/:id/modules-effective`
+
+Matriz completa de módulos para la institución.
+
+Response:
+
+```json
+{
+  "status": "success",
+  "data": {
+    "institution": { "id": 1, "name": "...", "public_code": "INS-..." },
+    "subscription": { "id": 12, "status": "active", "start_date": "...", "end_date": "...", "trial_ends_at": null, "renewal_mode": "manual" },
+    "plan":         { "id": 2, "code": "professional", "name": "Professional", "billing_frequency": "monthly", "price_amount": 65000, "currency_code": "ARS" },
+    "modules": [
+      {
+        "module": { "id": 3, "code": "campus", "name": "Campus Virtual", "category": "academic", "is_core": false, "status": "active" },
+        "plan_included":     true,
+        "override_mode":     null,
+        "override_notes":    null,
+        "effective_enabled": true,
+        "source":            "plan"
+      },
+      {
+        "module": { "id": 8, "code": "analytics", ... },
+        "plan_included":     false,
+        "override_mode":     "force_enabled",
+        "override_notes":    "Activado manualmente por soporte",
+        "effective_enabled": true,
+        "source":            "override"
+      }
+    ],
+    "summary": { "total": 8, "plan_included": 5, "override_count": 2, "effective_enabled": 6 }
+  }
+}
+```
+
+Roles: `support`, `commercial`, `finance`, `developer`, `superadmin`.
+
+### `PUT /api/v1/institutions/:id/modules-overrides`
+
+Reemplaza el set completo de overrides. Lo que no viene en el body, se elimina. Transacción completa + auditoría (`institution.modules_overrides_updated`) si hubo cambio.
+
+Body:
+
+```json
+{
+  "overrides": [
+    { "module_id": 8, "override_mode": "force_enabled",  "notes": "cortesía comercial" },
+    { "module_id": 3, "override_mode": "force_disabled", "notes": null }
+  ]
+}
+```
+
+`override_mode` ∈ `force_enabled` | `force_disabled`. Responde con la vista actualizada de `modules-effective`.
+
+Roles: `commercial`, `superadmin`.
+
+### `GET /api/v1/institutions/:id/license-summary`
+
+Resumen condensado de licencia (plan + suscripción + vencimiento + módulos activos + últimos 5 pagos).
+
+Response abreviada:
+
+```json
+{
+  "status": "success",
+  "data": {
+    "institution": { "id": 1, "name": "...", "public_code": "...", "status": "active", "technical_status": "optimal" },
+    "subscription": { "id": 12, "status": "active", "start_date": "...", "end_date": "...", "trial_ends_at": null, "renewal_mode": "manual" },
+    "plan": { "id": 2, "code": "professional", "name": "Professional", "billing_frequency": "monthly", "price_amount": 65000, "currency_code": "ARS" },
+    "expiration":   { "end_date": "2026-07-31", "days_remaining": 74, "trial_ends_at": null },
+    "effective_modules_count": 6,
+    "total_modules_count":     8,
+    "has_overrides":           true,
+    "recent_payments":         [ /* últimos 5 */ ]
+  }
+}
+```
+
+Roles: `support`, `commercial`, `finance`, `developer`, `superadmin`.
+
+---
+
+## Dashboard (extendido Fase 2B)
+
+`GET /api/v1/dashboard/summary` ahora incluye la sección `commercial` además del shape histórico:
+
+```json
+{
+  "commercial": {
+    "institutions_by_plan": [
+      { "plan_id": 2, "plan_code": "professional", "plan_name": "Professional",
+        "billing_frequency": "monthly", "price_amount": 65000, "currency_code": "ARS",
+        "institutions": 4 }
+    ],
+    "mrr_estimate": [
+      { "currency_code": "ARS", "amount": 260000 }
+    ],
+    "recent_payments":  [ /* últimos 6 */ ],
+    "payment_totals":   [ { "status": "approved", "currency_code": "ARS", "amount": 915000 } ],
+    "subscriptions": {
+      "by_status": { "trial": 1, "active": 4, "suspended": 0, "expired": 0, "canceled": 0 },
+      "upcoming_expirations": [ /* próximos 30 días */ ]
+    }
+  }
+}
+```
+
+MRR se estima normalizando `price_amount` por frecuencia: `monthly × 1`, `quarterly ÷ 3`, `yearly ÷ 12`, `custom` tratado como mensual.
+
+---
+
 ## Errores comunes
 
 | HTTP | Code | Significado |

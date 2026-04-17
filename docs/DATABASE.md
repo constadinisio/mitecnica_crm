@@ -173,6 +173,35 @@ Pagos manuales asociados a institución (y opcionalmente a una suscripción).
 
 ---
 
+## Tablas Fase 2B (control fino por institución)
+
+### `institution_modules`
+Overrides manuales de módulos por institución. **Sólo existe fila si hay override**; en su ausencia el módulo se resuelve contra el plan.
+
+| Campo | Tipo | Notas |
+|-------|------|-------|
+| `id` | `serial PK` | |
+| `institution_id` | `int FK institutions(id)` | `CASCADE` |
+| `module_id` | `int FK modules_catalog(id)` | `CASCADE` |
+| `override_mode` | `enum institution_module_override_mode` | `force_enabled`, `force_disabled` |
+| `notes` | `text` | contexto comercial/técnico del override |
+| `created_at` / `updated_at` | `timestamptz` | |
+
+Restricciones: `UNIQUE(institution_id, module_id)`. Índices: `institution_id`, `module_id`, `override_mode`.
+
+Regla de composición (service `institutionModuleService`):
+
+```
+plan incluye módulo + sin override  →  enabled
+plan NO incluye      + sin override  →  disabled
+override = force_enabled             →  enabled SIEMPRE
+override = force_disabled            →  disabled SIEMPRE
+```
+
+El plan "activo" de la institución se resuelve a través de `subscriptions` (status ∈ {`trial`,`active`}). Si no hay suscripción viva, todos los módulos sin override quedan deshabilitados.
+
+---
+
 ## Relaciones
 
 ```
@@ -186,6 +215,8 @@ institutions (1) ──< (n) subscriptions (n) >── (1) plans
         └──< (n) payments (FK directa opcional)
 
 plans (n) >──< (n) modules_catalog   via plan_modules
+
+institutions (n) >──< (n) modules_catalog   via institution_modules (overrides)
 ```
 
 ## Seeds Fase 2A

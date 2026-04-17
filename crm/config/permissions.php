@@ -13,10 +13,12 @@ return [
     'leads.assign'               => ['superadmin', 'commercial', 'support'],
     'leads.convert'              => ['superadmin', 'commercial'],
 
-    'institutions.view'          => ['superadmin', 'support', 'commercial', 'finance', 'developer'],
-    'institutions.create'        => ['superadmin', 'commercial'],
-    'institutions.update'        => ['superadmin', 'support', 'commercial'],
-    'institutions.change_status' => ['superadmin', 'support', 'commercial'],
+    'institutions.view'              => ['superadmin', 'support', 'commercial', 'finance', 'developer'],
+    'institutions.create'            => ['superadmin', 'commercial'],
+    'institutions.update'            => ['superadmin', 'support', 'commercial'],
+    'institutions.change_status'     => ['superadmin', 'support', 'commercial'],
+    'institutions.view_license'      => ['superadmin', 'support', 'commercial', 'finance', 'developer'],
+    'institutions.override_modules'  => ['superadmin', 'commercial'],
 
     'plans.view'                 => ['superadmin', 'support', 'commercial', 'finance', 'developer'],
     'plans.create'               => ['superadmin', 'commercial'],

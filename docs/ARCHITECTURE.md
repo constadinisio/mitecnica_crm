@@ -161,3 +161,50 @@ Se agregaron 4 KPI cards comerciales (Planes activos / Subs vivas / Cobrado últ
 | finance | R | R | R | R | R/W + status |
 | support | R | R | R | R + status | R |
 | developer | R | R | R | — | — |
+
+## Fase 2B — Control fino por institución
+
+Extiende Fase 2A con la capa que faltaba entre "plan genérico" e "institución concreta": **overrides**.
+
+### Regla de composición (crítica)
+
+El estado efectivo de un módulo para una institución es una función pura de **plan activo** + **override**:
+
+| Plan incluye | Override | Estado final |
+|:---:|:---:|:---:|
+| sí | — | **enabled** (source: `plan`) |
+| no | — | **disabled** (source: `plan`) |
+| sí | `force_enabled` | enabled (source: `plan+override`) |
+| sí | `force_disabled` | **disabled** (source: `override`) |
+| no | `force_enabled` | **enabled** (source: `override`) |
+| no | `force_disabled` | disabled (source: `override`) |
+
+El plan activo se determina vía la única `subscription` viva (status ∈ {`trial`,`active`}). Sin suscripción viva: todos los módulos quedan deshabilitados por plan (los overrides siguen aplicando si existen).
+
+### Módulo nuevo (backend)
+
+- `institutionModules` (`api/src/modules/institutionModules`)
+  - `GET /api/v1/institutions/:id/modules-effective` — lista completa con `plan_included`, `override_mode`, `effective_enabled`, `source` + summary.
+  - `PUT /api/v1/institutions/:id/modules-overrides` — reemplaza el set completo de overrides (transacción). Audita si cambió.
+  - `GET /api/v1/institutions/:id/license-summary` — plan + suscripción + vencimiento + módulos activos + últimos pagos.
+
+### Nuevas vistas (frontend)
+
+- `institutions/:id` — tabs reemplazados: **General · Licencia · Módulos · Suscripción · Pagos · Dominios · Auditoría**.
+  - Tab "Módulos": tabla de estado efectivo con toggle por fila (`Sin override` / `Forzar habilitado` / `Forzar deshabilitado`) y guardado batch (`POST /institutions/:id/modules-overrides`).
+- `/audit` y `/audit/:id` — lista paginada con filtros (usuario, entidad, entity_id, rango de fechas, búsqueda) y detalle con `before_data` / `after_data` / IP / User-Agent.
+- Dashboard: dos tarjetas nuevas — "Instituciones por plan" (buckets con barra) y "MRR estimado" (mensualización simple por frecuencia).
+
+### Auditoría agregada
+
+- `institution.modules_overrides_updated` → entity `institutions`, con diff completo de overrides antes/después.
+
+### RBAC Fase 2B
+
+| Rol | Ver licencia | Modificar overrides | Ver auditoría |
+|-----|:---:|:---:|:---:|
+| superadmin | ✔ | ✔ | ✔ |
+| commercial | ✔ | ✔ | — |
+| support | ✔ | — | ✔ |
+| finance | ✔ | — | — |
+| developer | ✔ | — | ✔ |

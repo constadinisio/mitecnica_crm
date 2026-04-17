@@ -139,5 +139,6 @@ Ver [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) para la guía de Apache + PM2.
 
 - **Fase 1** ✅ — base del repo, auth CRM, dashboard ejecutivo inicial, módulo instituciones, auditoría, fundaciones visuales.
 - **Fase 2A** ✅ — núcleo comercial: planes, módulos del producto, matriz plan × módulos, suscripciones y pagos. Moneda por defecto **ARS** (producto argentino). Dashboard extendido con KPIs comerciales. Constraint de "una suscripción viva por institución" a nivel DB.
+- **Fase 2B** ✅ — control fino por institución: overrides de módulos (`institution_modules`), vista de licencia efectiva (`/institutions/:id/license-summary`, `/institutions/:id/modules-effective`, `/institutions/:id/modules-overrides`), tabs de licencia/módulos/suscripción/pagos en la ficha, módulo `/audit` con filtros y detalle, dashboard ampliado (instituciones por plan + MRR estimado). Toda la mutación audita; la lógica de composición plan → override → efectivo vive en `institutionModuleService`.
 
-Quedan para próximas fases: provisioning técnico real, overrides por institución, billing automation, pasarela de pagos real, UI completa de usuarios CRM, soporte/tickets, observabilidad, configuración avanzada.
+Quedan para próximas fases: provisioning técnico real, conexión con la tenant app, billing automation, pasarela de pagos real, UI completa de usuarios CRM, soporte/tickets, observabilidad, configuración avanzada.

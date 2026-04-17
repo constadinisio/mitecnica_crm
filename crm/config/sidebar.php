@@ -27,7 +27,7 @@ return [
     [
         'section' => 'Administración',
         'items' => [
-            ['label' => 'Auditoría',       'route' => '#',              'icon' => 'shield',      'soon' => true, 'roles' => ['superadmin','support','developer']],
+            ['label' => 'Auditoría',       'route' => '/audit',         'icon' => 'shield',      'match' => '^/audit', 'roles' => ['superadmin','support','developer']],
             ['label' => 'Usuarios CRM',    'route' => '#',              'icon' => 'users',       'soon' => true, 'roles' => ['superadmin']],
             ['label' => 'Soporte',         'route' => '#',              'icon' => 'shield',      'soon' => true],
             ['label' => 'Ajustes',         'route' => '#',              'icon' => 'cog',         'soon' => true, 'roles' => ['superadmin']],

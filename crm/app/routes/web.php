@@ -48,6 +48,7 @@ $routes = [
     ['GET',  '^/institutions/(?P<id>\d+)/edit$',  fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/institutions/edit.php"; })($m['id'])],
     ['POST', '^/institutions/(?P<id>\d+)/edit$',  fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/institutions/edit.php"; })($m['id'])],
     ['POST', '^/institutions/(?P<id>\d+)/status$',fn($m) => (function($id) use ($MODULES) { $_POST['id'] = $id; require "$MODULES/institutions/change_status.php"; })($m['id'])],
+    ['POST', '^/institutions/(?P<id>\d+)/modules-overrides$', fn($m) => (function($id) use ($MODULES) { $_POST['id'] = $id; require "$MODULES/institutions/modules_overrides.php"; })($m['id'])],
 
     // Plans
     ['GET',  '^/plans$',                          fn() => require "$MODULES/plans/list.php"],
@@ -86,6 +87,10 @@ $routes = [
     ['GET',  '^/payments/(?P<id>\d+)/edit$',      fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/payments/edit.php"; })($m['id'])],
     ['POST', '^/payments/(?P<id>\d+)/edit$',      fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/payments/edit.php"; })($m['id'])],
     ['POST', '^/payments/(?P<id>\d+)/status$',    fn($m) => (function($id) use ($MODULES) { $_POST['id'] = $id; require "$MODULES/payments/change_status.php"; })($m['id'])],
+
+    // Audit
+    ['GET',  '^/audit$',                          fn() => require "$MODULES/audit/list.php"],
+    ['GET',  '^/audit/(?P<id>\d+)$',              fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/audit/detail.php"; })($m['id'])],
 ];
 
 foreach ($routes as [$m, $pat, $fn]) {

@@ -21,6 +21,13 @@ try {
 $counts = $summary['counts'] ?? [];
 $byStatus = $counts['by_status'] ?? [];
 $byTech = $counts['by_technical_status'] ?? [];
+$commercial = $summary['commercial'] ?? [];
+$institutionsByPlan = $commercial['institutions_by_plan'] ?? [];
+$mrrEstimate = $commercial['mrr_estimate'] ?? [];
+$mrrARS = 0.0;
+foreach ($mrrEstimate as $m) {
+    if (strtoupper($m['currency_code'] ?? '') === 'ARS') { $mrrARS = (float)($m['amount'] ?? 0); }
+}
 
 // Fase 2A: datos comerciales (opcionales — si fallan no rompen el dashboard)
 $plansSummary = null;
@@ -143,6 +150,70 @@ ob_start();
     include dirname(__DIR__, 2) . '/components/stat_card.php';
   ?>
 </section>
+
+<!-- Fase 2B: distribución por plan + MRR estimado -->
+<?php if (!empty($institutionsByPlan) || $mrrARS > 0): ?>
+<section class="mt-6 grid grid-cols-1 xl:grid-cols-3 gap-4">
+  <div class="xl:col-span-2 card">
+    <div class="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
+      <div>
+        <h3 class="text-sm font-semibold text-white">Instituciones por plan</h3>
+        <p class="text-xs text-slate-400">Solo suscripciones vivas (trial + active).</p>
+      </div>
+      <a href="/plans" class="text-xs text-brand-300 hover:text-brand-200">Ver planes →</a>
+    </div>
+    <?php if (empty($institutionsByPlan)): ?>
+      <div class="px-5 py-8 text-center text-sm text-slate-500">No hay suscripciones activas registradas.</div>
+    <?php else: ?>
+      <ul class="divide-y divide-slate-800/60">
+        <?php
+          $maxCount = 0;
+          foreach ($institutionsByPlan as $row) { $maxCount = max($maxCount, (int)$row['institutions']); }
+          foreach ($institutionsByPlan as $row):
+            $pct = $maxCount > 0 ? min(100, (int)round(($row['institutions'] / $maxCount) * 100)) : 0;
+        ?>
+          <li class="px-5 py-3">
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex-1 min-w-0">
+                <div class="text-sm text-white truncate"><?= e($row['plan_name']) ?>
+                  <span class="text-xs text-slate-500 font-mono ml-2"><?= e($row['plan_code']) ?></span>
+                </div>
+                <div class="text-xs text-slate-500"><?= e(format_money($row['price_amount'], $row['currency_code'])) ?> · <?= e(frequency_label($row['billing_frequency'])) ?></div>
+              </div>
+              <div class="text-right tabular-nums">
+                <div class="text-sm text-slate-100"><?= (int)$row['institutions'] ?></div>
+                <div class="text-xs text-slate-500">instituciones</div>
+              </div>
+            </div>
+            <div class="mt-2 h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
+              <div class="h-full bg-brand-500/60" style="width: <?= $pct ?>%"></div>
+            </div>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    <?php endif; ?>
+  </div>
+
+  <div class="card p-5">
+    <div class="text-xs uppercase tracking-wider text-slate-500">MRR estimado</div>
+    <div class="mt-2 text-3xl font-semibold text-white tabular-nums"><?= e(format_money($mrrARS, 'ARS')) ?></div>
+    <div class="text-xs text-slate-500 mt-1">Recurrente mensual proyectado en ARS a partir de suscripciones vivas.</div>
+    <?php if (count($mrrEstimate) > 1): ?>
+      <div class="mt-4 border-t border-slate-800/60 pt-3 text-xs text-slate-400 space-y-1">
+        <?php foreach ($mrrEstimate as $m): if (strtoupper($m['currency_code']) === 'ARS') continue; ?>
+          <div class="flex items-center justify-between">
+            <span><?= e($m['currency_code']) ?></span>
+            <span class="tabular-nums text-slate-200"><?= e(format_money($m['amount'], $m['currency_code'])) ?></span>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
+    <div class="mt-4 text-xs text-slate-500">
+      Basado en la frecuencia de cobro: mensual × 1, trimestral ÷ 3, anual ÷ 12.
+    </div>
+  </div>
+</section>
+<?php endif; ?>
 
 <?php if (!empty($subsSummary['upcoming_renewals']) || !empty($paySummary['recent'])): ?>
 <section class="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-4">
