@@ -20,7 +20,6 @@ $list = $institutions ?? [];
             <th>Institución</th>
             <th>Estado</th>
             <th>Plan</th>
-            <th>Estado técnico</th>
             <th>Vencimiento</th>
             <th>Última actividad</th>
             <th class="text-right">Acciones</th>
@@ -42,7 +41,6 @@ $list = $institutions ?? [];
               </td>
               <td><?php $status = $ins['status']; include dirname(__DIR__, 3) . '/components/status_badge.php'; ?></td>
               <td class="text-slate-300"><?= e($ins['current_plan_name'] ?? '—') ?></td>
-              <td><?php $status = $ins['technical_status']; include dirname(__DIR__, 3) . '/components/status_badge.php'; ?></td>
               <td>
                 <div class="text-slate-200"><?= format_date($ins['expiration_date'] ?? null) ?></div>
                 <?php if ($days !== null): ?>

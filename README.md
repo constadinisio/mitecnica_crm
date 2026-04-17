@@ -137,6 +137,7 @@ Ver [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) para la guía de Apache + PM2.
 
 ## Fases
 
-La presente entrega cubre la **Fase 1**: base del repo, auth CRM, dashboard ejecutivo inicial, módulo de instituciones, auditoría básica y fundaciones visuales/estructurales para fases futuras.
+- **Fase 1** ✅ — base del repo, auth CRM, dashboard ejecutivo inicial, módulo instituciones, auditoría, fundaciones visuales.
+- **Fase 2A** ✅ — núcleo comercial: planes, módulos del producto, matriz plan × módulos, suscripciones y pagos. Moneda por defecto **ARS** (producto argentino). Dashboard extendido con KPIs comerciales. Constraint de "una suscripción viva por institución" a nivel DB.
 
-Quedan para próximas fases: planes/módulos/suscripciones/pagos CRUD completo, provisioning técnico real, observabilidad, soporte, configuración avanzada, UI de usuarios CRM, etc. La estructura queda preparada para crecer sin reestructuraciones.
+Quedan para próximas fases: provisioning técnico real, overrides por institución, billing automation, pasarela de pagos real, UI completa de usuarios CRM, soporte/tickets, observabilidad, configuración avanzada.

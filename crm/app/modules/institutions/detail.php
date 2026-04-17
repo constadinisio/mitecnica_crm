@@ -69,9 +69,9 @@ ob_start();
     <div class="text-xs text-slate-500 mt-1">Vence: <?= format_date($institution['expiration_date'] ?? null) ?></div>
   </div>
   <div class="card p-5">
-    <div class="text-xs uppercase tracking-wider text-slate-500">Estado técnico</div>
-    <div class="mt-2"><?php $status = $institution['technical_status']; include dirname(__DIR__, 2) . '/components/status_badge.php'; ?></div>
-    <div class="text-xs text-slate-500 mt-2">Última actividad: <?= format_relative($institution['last_activity_at'] ?? null) ?></div>
+    <div class="text-xs uppercase tracking-wider text-slate-500">Última actividad</div>
+    <div class="mt-2 text-lg font-semibold text-white"><?= e(format_relative($institution['last_activity_at'] ?? null)) ?></div>
+    <div class="text-xs text-slate-500 mt-1"><?= e(format_datetime($institution['last_activity_at'] ?? null)) ?></div>
   </div>
 </section>
 

@@ -5,7 +5,7 @@ require_auth();
 require_permission('institutions.view');
 
 $query = [];
-$allowedFilters = ['search', 'status', 'technical_status', 'plan', 'sort', 'order', 'page', 'limit'];
+$allowedFilters = ['search', 'status', 'plan', 'sort', 'order', 'page', 'limit'];
 foreach ($allowedFilters as $k) {
     if (isset($_GET[$k]) && $_GET[$k] !== '') $query[$k] = $_GET[$k];
 }
@@ -27,7 +27,7 @@ ob_start();
 
 <?php
   $title = 'Instituciones';
-  $subtitle = 'Gestión comercial y técnica de clientes activos y potenciales.';
+  $subtitle = 'Gestión comercial de clientes activos y potenciales.';
   $breadcrumbs = [['label' => 'Dashboard', 'href' => '/dashboard'], ['label' => 'Instituciones']];
   $actionsHtml = '';
   if (can('institutions.create')) {

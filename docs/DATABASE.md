@@ -86,6 +86,93 @@ Tabla principal del negocio.
 
 ---
 
+## Tablas Fase 2A (núcleo comercial)
+
+### `plans`
+Plan comercial del producto. Moneda por defecto **ARS** (Argentina).
+
+| Campo | Tipo | Notas |
+|-------|------|-------|
+| `id` | `serial PK` | |
+| `code` | `varchar(32) UNIQUE NOT NULL` | ej. `basic`, `professional`, `elite`, `enterprise` |
+| `name` | `varchar(120) NOT NULL` | |
+| `description` | `text` | |
+| `billing_frequency` | `enum plan_billing_frequency` | `monthly,quarterly,yearly,custom` |
+| `price_amount` | `numeric(12,2) NOT NULL` | |
+| `currency_code` | `varchar(10) NOT NULL DEFAULT 'ARS'` | ISO code |
+| `status` | `enum plan_status` | `active,inactive,archived` |
+| `is_custom` | `boolean NOT NULL DEFAULT false` | planes a medida |
+| `created_at` / `updated_at` | `timestamptz` | |
+
+Índices: `status`, `billing_frequency`.
+
+### `modules_catalog`
+Catálogo de módulos del producto.
+
+| Campo | Tipo | Notas |
+|-------|------|-------|
+| `id` | `serial PK` | |
+| `code` | `varchar(48) UNIQUE NOT NULL` | ej. `attendance`, `grades`, `analytics` |
+| `name` | `varchar(120) NOT NULL` | |
+| `description` | `text` | |
+| `category` | `enum module_category` | `academic,communication,administration,technical,analytics,other` (nullable) |
+| `status` | `enum module_status` | `active,inactive` |
+| `is_core` | `boolean NOT NULL DEFAULT false` | módulo "core" |
+| `created_at` / `updated_at` | `timestamptz` | |
+
+### `plan_modules`
+Tabla pivote: qué módulos incluye cada plan.
+
+| Campo | Tipo | Notas |
+|-------|------|-------|
+| `id` | `serial PK` | |
+| `plan_id` | `int FK plans(id)` | `CASCADE` al borrar plan |
+| `module_id` | `int FK modules_catalog(id)` | `CASCADE` al borrar módulo |
+| `included` | `boolean NOT NULL DEFAULT true` | toggle |
+| `created_at` / `updated_at` | `timestamptz` | |
+
+Unique `(plan_id, module_id)`. Índices: `plan_id`, `module_id`.
+
+### `subscriptions`
+Suscripción de una institución a un plan. Puede haber historial; **sólo una vigente** por institución.
+
+| Campo | Tipo | Notas |
+|-------|------|-------|
+| `id` | `serial PK` | |
+| `institution_id` | `int FK institutions(id)` | `CASCADE` |
+| `plan_id` | `int FK plans(id)` | `RESTRICT` |
+| `status` | `enum subscription_status` | `trial,active,suspended,expired,canceled` |
+| `start_date` | `date NOT NULL` | |
+| `end_date` | `date` | fin previsto |
+| `trial_ends_at` | `timestamptz` | fin de trial |
+| `renewal_mode` | `enum subscription_renewal_mode` | `manual,automatic` |
+| `billing_notes` | `text` | |
+| `created_at` / `updated_at` | `timestamptz` | |
+
+**Índice único parcial**: `subscriptions_one_live_per_institution` sobre `institution_id` donde `status IN ('trial','active')`. Esto garantiza que sólo pueda existir UNA suscripción viva por institución a nivel DB, permitiendo historial de canceladas/expiradas.
+
+### `payments`
+Pagos manuales asociados a institución (y opcionalmente a una suscripción).
+
+| Campo | Tipo | Notas |
+|-------|------|-------|
+| `id` | `serial PK` | |
+| `institution_id` | `int FK institutions(id)` | `CASCADE` |
+| `subscription_id` | `int FK subscriptions(id)` | `SET NULL` (nullable) |
+| `amount` | `numeric(12,2) NOT NULL` | |
+| `currency_code` | `varchar(10) NOT NULL DEFAULT 'ARS'` | |
+| `payment_date` | `timestamptz NOT NULL` | |
+| `status` | `enum payment_status` | `pending,approved,rejected,expired,canceled` |
+| `payment_method` | `varchar(80)` | ej. `Transferencia`, `Mercado Pago` |
+| `reference_code` | `varchar(120)` | referencia externa |
+| `notes` | `text` | |
+| `created_by_user_id` | `int FK crm_users(id)` | `SET NULL` |
+| `created_at` / `updated_at` | `timestamptz` | |
+
+Índices: `status`, `payment_date`, `institution_id`, `subscription_id`.
+
+---
+
 ## Relaciones
 
 ```
@@ -93,8 +180,21 @@ crm_roles (1) ──< (n) crm_users (1) ──< (n) crm_refresh_tokens
                                │
                                └──< (n) audit_logs.actor_user_id
 
-institutions (1) ──< (n) audit_logs (via entity='institutions', entity_id=institution.id)
+institutions (1) ──< (n) subscriptions (n) >── (1) plans
+        │                      │
+        │                      └──< (n) payments
+        └──< (n) payments (FK directa opcional)
+
+plans (n) >──< (n) modules_catalog   via plan_modules
 ```
+
+## Seeds Fase 2A
+
+- **04_plans.js** — 4 planes demo en **ARS**: basic (25.000), professional (65.000), elite (120.000), enterprise (1.800.000/año)
+- **05_modules_catalog.js** — 8 módulos (attendance, grades, campus, report_cards, families, doe, inventory, analytics)
+- **06_plan_modules.js** — matriz coherente (basic 3 / professional 5 / elite 7 / enterprise 8)
+- **07_subscriptions.js** — 5 suscripciones asociadas a las instituciones de Fase 1 (con estados variados)
+- **08_payments.js** — 9 pagos demo en ARS con distintos estados y métodos locales (Transferencia, Mercado Pago, Link de pago, Tarjeta)
 
 ---
 

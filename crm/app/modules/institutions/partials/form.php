@@ -4,10 +4,12 @@ declare(strict_types=1);
 /** Vars:
  *   string $action  (form action)
  *   array|null $institution (for edit)
+ *   array|null $availablePlans (passed by create.php/edit.php for the dropdown)
  *   string $submitLabel
  */
 $ins = $institution ?? null;
 $isEdit = $ins !== null;
+$availablePlans = $availablePlans ?? [];
 
 $statuses = [
   'trial'        => 'Trial',
@@ -17,12 +19,19 @@ $statuses = [
   'expired'      => 'Expirada',
   'inactive'     => 'Inactiva',
 ];
-$techs = [
-  'pending'  => 'Pending',
-  'optimal'  => 'Optimal',
-  'updating' => 'Updating',
-  'offline'  => 'Offline',
-];
+
+// Build plan options. The backend field is a free text `current_plan_name`,
+// so we use the plan NAME as both value and label. If the current saved value
+// does not match any active plan, we keep it as a selected "other" option.
+$planOptions = ['' => '— Sin plan asignado —'];
+foreach ($availablePlans as $p) {
+    $planOptions[$p['name']] = $p['name'];
+}
+$currentPlan = old_raw('current_plan_name', $ins['current_plan_name'] ?? '');
+if ($currentPlan && !isset($planOptions[$currentPlan])) {
+    // preserve legacy/custom value in the dropdown
+    $planOptions[$currentPlan] = $currentPlan . ' (personalizado)';
+}
 ?>
 <form method="post" action="<?= e($action) ?>" class="grid grid-cols-1 lg:grid-cols-3 gap-6" novalidate>
   <?= csrf_field() ?>
@@ -98,9 +107,12 @@ $techs = [
       <h3 class="text-sm font-semibold text-white mb-4">Comercial</h3>
       <div class="space-y-4">
         <?php
-          $name = 'current_plan_name'; $label = 'Plan actual'; $type = 'text'; $required = false;
-          $placeholder = 'Professional / Trial...'; $value = old('current_plan_name', $ins['current_plan_name'] ?? '');
-          include dirname(__DIR__, 3) . '/components/form_input.php';
+          $name = 'current_plan_name'; $label = 'Plan actual'; $required = false;
+          $options = $planOptions; $value = $currentPlan;
+          $hint = 'Seleccioná de los planes activos del catálogo.';
+          $placeholder = null;
+          include dirname(__DIR__, 3) . '/components/form_select.php';
+          $hint = null;
         ?>
         <?php
           $name = 'expiration_date'; $label = 'Fecha de vencimiento'; $type = 'date'; $required = false;
@@ -113,17 +125,6 @@ $techs = [
           include dirname(__DIR__, 3) . '/components/form_select.php';
         ?>
       </div>
-    </div>
-
-    <div class="card p-6">
-      <h3 class="text-sm font-semibold text-white mb-4">Técnico</h3>
-      <?php
-        $name = 'technical_status'; $label = 'Estado técnico reportado'; $required = true;
-        $options = $techs; $value = old('technical_status', $ins['technical_status'] ?? 'pending');
-        $hint = 'Dato de negocio, no panel de infraestructura.';
-        include dirname(__DIR__, 3) . '/components/form_select.php';
-        $hint = null;
-      ?>
     </div>
 
     <div class="flex items-center justify-end gap-2">

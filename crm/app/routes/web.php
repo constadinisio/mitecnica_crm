@@ -27,6 +27,18 @@ $routes = [
     ['GET',  '^/auth/google$',                    fn() => require "$MODULES/auth/google_start.php"],
     ['GET',  '^/auth/google/callback$',           fn() => require "$MODULES/auth/google_callback.php"],
 
+    // Public contact / purchase request (no auth)
+    ['GET',  '^/contact$',                        fn() => require "$MODULES/public/contact.php"],
+    ['POST', '^/contact$',                        fn() => require "$MODULES/public/contact.php"],
+
+    // Leads (internal)
+    ['GET',  '^/leads$',                          fn() => require "$MODULES/leads/list.php"],
+    ['GET',  '^/leads/(?P<id>\d+)$',              fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/leads/detail.php"; })($m['id'])],
+    ['GET',  '^/leads/(?P<id>\d+)/convert$',      fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/leads/convert.php"; })($m['id'])],
+    ['POST', '^/leads/(?P<id>\d+)/convert$',      fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/leads/convert.php"; })($m['id'])],
+    ['POST', '^/leads/(?P<id>\d+)/status$',       fn($m) => (function($id) use ($MODULES) { $_POST['id'] = $id; require "$MODULES/leads/change_status.php"; })($m['id'])],
+    ['POST', '^/leads/(?P<id>\d+)/assign$',       fn($m) => (function($id) use ($MODULES) { $_POST['id'] = $id; require "$MODULES/leads/assign.php"; })($m['id'])],
+
     ['GET',  '^/dashboard$',                      fn() => require "$MODULES/dashboard/index.php"],
 
     ['GET',  '^/institutions$',                   fn() => require "$MODULES/institutions/list.php"],
@@ -36,6 +48,44 @@ $routes = [
     ['GET',  '^/institutions/(?P<id>\d+)/edit$',  fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/institutions/edit.php"; })($m['id'])],
     ['POST', '^/institutions/(?P<id>\d+)/edit$',  fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/institutions/edit.php"; })($m['id'])],
     ['POST', '^/institutions/(?P<id>\d+)/status$',fn($m) => (function($id) use ($MODULES) { $_POST['id'] = $id; require "$MODULES/institutions/change_status.php"; })($m['id'])],
+
+    // Plans
+    ['GET',  '^/plans$',                          fn() => require "$MODULES/plans/list.php"],
+    ['GET',  '^/plans/new$',                      fn() => require "$MODULES/plans/create.php"],
+    ['POST', '^/plans/new$',                      fn() => require "$MODULES/plans/create.php"],
+    ['GET',  '^/plans/(?P<id>\d+)$',              fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/plans/detail.php"; })($m['id'])],
+    ['GET',  '^/plans/(?P<id>\d+)/edit$',         fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/plans/edit.php"; })($m['id'])],
+    ['POST', '^/plans/(?P<id>\d+)/edit$',         fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/plans/edit.php"; })($m['id'])],
+
+    // Modules catalog
+    ['GET',  '^/modules$',                        fn() => require "$MODULES/modules_catalog/list.php"],
+    ['GET',  '^/modules/new$',                    fn() => require "$MODULES/modules_catalog/create.php"],
+    ['POST', '^/modules/new$',                    fn() => require "$MODULES/modules_catalog/create.php"],
+    ['GET',  '^/modules/(?P<id>\d+)$',            fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/modules_catalog/detail.php"; })($m['id'])],
+    ['GET',  '^/modules/(?P<id>\d+)/edit$',       fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/modules_catalog/edit.php"; })($m['id'])],
+    ['POST', '^/modules/(?P<id>\d+)/edit$',       fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/modules_catalog/edit.php"; })($m['id'])],
+
+    // Plan × Modules matrix
+    ['GET',  '^/plan-matrix$',                    fn() => require "$MODULES/plan_modules/matrix.php"],
+    ['POST', '^/plan-matrix$',                    fn() => require "$MODULES/plan_modules/matrix.php"],
+
+    // Subscriptions
+    ['GET',  '^/subscriptions$',                  fn() => require "$MODULES/subscriptions/list.php"],
+    ['GET',  '^/subscriptions/new$',              fn() => require "$MODULES/subscriptions/create.php"],
+    ['POST', '^/subscriptions/new$',              fn() => require "$MODULES/subscriptions/create.php"],
+    ['GET',  '^/subscriptions/(?P<id>\d+)$',      fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/subscriptions/detail.php"; })($m['id'])],
+    ['GET',  '^/subscriptions/(?P<id>\d+)/edit$', fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/subscriptions/edit.php"; })($m['id'])],
+    ['POST', '^/subscriptions/(?P<id>\d+)/edit$', fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/subscriptions/edit.php"; })($m['id'])],
+    ['POST', '^/subscriptions/(?P<id>\d+)/status$', fn($m) => (function($id) use ($MODULES) { $_POST['id'] = $id; require "$MODULES/subscriptions/change_status.php"; })($m['id'])],
+
+    // Payments
+    ['GET',  '^/payments$',                       fn() => require "$MODULES/payments/list.php"],
+    ['GET',  '^/payments/new$',                   fn() => require "$MODULES/payments/create.php"],
+    ['POST', '^/payments/new$',                   fn() => require "$MODULES/payments/create.php"],
+    ['GET',  '^/payments/(?P<id>\d+)$',           fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/payments/detail.php"; })($m['id'])],
+    ['GET',  '^/payments/(?P<id>\d+)/edit$',      fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/payments/edit.php"; })($m['id'])],
+    ['POST', '^/payments/(?P<id>\d+)/edit$',      fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/payments/edit.php"; })($m['id'])],
+    ['POST', '^/payments/(?P<id>\d+)/status$',    fn($m) => (function($id) use ($MODULES) { $_POST['id'] = $id; require "$MODULES/payments/change_status.php"; })($m['id'])],
 ];
 
 foreach ($routes as [$m, $pat, $fn]) {

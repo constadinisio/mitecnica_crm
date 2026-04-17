@@ -20,7 +20,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'current_plan_name' => trim((string)($_POST['current_plan_name'] ?? '')) ?: null,
         'expiration_date'   => trim((string)($_POST['expiration_date'] ?? '')) ?: null,
         'status'            => $_POST['status'] ?? 'trial',
-        'technical_status'  => $_POST['technical_status'] ?? 'pending',
     ];
 
     try {
@@ -36,6 +35,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('/institutions/new');
     }
 }
+
+$availablePlans = [];
+try {
+    $availablePlans = api_get('/plans', ['query' => ['limit' => 100, 'status' => 'active']])['data'] ?? [];
+} catch (Throwable) { /* silent: form still works with a custom value */ }
 
 ob_start();
 ?>

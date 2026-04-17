@@ -10,13 +10,6 @@ $statuses = [
   'expired'     => 'Expirada',
   'inactive'    => 'Inactiva',
 ];
-$techs = [
-  ''         => 'Todos los estados técnicos',
-  'optimal'  => 'Optimal',
-  'updating' => 'Updating',
-  'pending'  => 'Pending',
-  'offline'  => 'Offline',
-];
 ?>
 <form method="get" action="/institutions" class="card p-4 flex flex-col md:flex-row md:items-center gap-3" data-filters>
   <div class="flex-1 relative">
@@ -30,11 +23,6 @@ $techs = [
   <select name="status" class="input h-10 md:w-48">
     <?php foreach ($statuses as $v => $l): ?>
       <option value="<?= e($v) ?>" <?= (($q['status'] ?? '') === $v) ? 'selected' : '' ?>><?= e($l) ?></option>
-    <?php endforeach; ?>
-  </select>
-  <select name="technical_status" class="input h-10 md:w-52">
-    <?php foreach ($techs as $v => $l): ?>
-      <option value="<?= e($v) ?>" <?= (($q['technical_status'] ?? '') === $v) ? 'selected' : '' ?>><?= e($l) ?></option>
     <?php endforeach; ?>
   </select>
   <div class="flex gap-2">

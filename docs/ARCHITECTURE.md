@@ -122,4 +122,42 @@ El API usa `authorizeRoles('...')`. El frontend espeja la decisión en `crm/conf
 - **CSRF**: el frontend PHP emite tokens por sesión y los valida en cada `POST`.
 - **CSS**: Tailwind 3 es la fuente canónica (configurada en `tailwind.config.js`). El repo trae un `output.css` precompilado listo para bootear sin build; `scripts/build-tailwind.{sh,bat}` regenera el archivo correctamente optimizado.
 - **Sin DevOps visible**: el dashboard está diseñado a propósito sin CPU, memoria, clusters, pipelines o logs en vivo. El "estado técnico" es info de negocio.
-- **Plans/Módulos/Pagos**: fuera de alcance en Fase 1. Se dejan enlaces con badge "Soon" en la sidebar y el detail page menciona la fase futura para no confundir al usuario.
+- **Plans/Módulos/Pagos**: fuera de alcance en Fase 1. Implementados en **Fase 2A**.
+
+## Fase 2A — Núcleo comercial
+
+Agregada sobre la base de Fase 1 sin romper nada. Aporta:
+
+### Módulos nuevos (backend + frontend)
+
+| Módulo | Backend | Frontend |
+|--------|---------|----------|
+| `plans` | CRUD + summary + status change | `/plans`, `/plans/new`, `/plans/:id`, `/plans/:id/edit` |
+| `modulesCatalog` | CRUD + status change | `/modules`, `/modules/new`, `/modules/:id`, `/modules/:id/edit` |
+| `planModules` | `GET /matrix`, `GET /plans/:id/modules`, `PUT /plans/:id/modules` (reemplaza set) con auditoría de entitlements | `/plan-matrix` (filas = módulos, columnas = planes, toggle por celda, guardar por plan) |
+| `subscriptions` | CRUD + status + summary + constraint única parcial en DB (una viva por institución) | `/subscriptions`, `/subscriptions/new`, `/subscriptions/:id` (con lista de pagos), `/subscriptions/:id/edit` |
+| `payments` | CRUD + status + summary con filtros de rango | `/payments`, `/payments/new`, `/payments/:id`, `/payments/:id/edit` |
+
+### Moneda
+Precios y pagos en **ARS (pesos argentinos)** por defecto. `USD` queda soportado como opción en los selects de moneda, pero los seeds y defaults usan ARS (producto argentino).
+
+### Regla de negocio "una suscripción viva por institución"
+- A nivel DB: índice único parcial (`WHERE status IN ('trial','active')`) sobre `subscriptions(institution_id)`.
+- A nivel service: `ensureNoLiveConflict()` en `subscriptionService` valida antes de crear / cambiar estado y devuelve 409 con `existing_subscription_id`.
+- Permite historial: canceladas/expiradas no bloquean nuevas altas.
+
+### Entitlements y matriz
+La matriz Plan × Módulo se guarda **por plan entero** (endpoint `PUT /plans/:id/modules`), hace el reemplazo en transacción y audita como `plan.modules_updated` sólo si cambió el set. El frontend replica esa UX: cada columna de plan tiene su botón "Guardar" y sólo commit esa columna.
+
+### Dashboard (extensión)
+Se agregaron 4 KPI cards comerciales (Planes activos / Subs vivas / Cobrado últimos 30d en ARS / Pagos pendientes) y 2 listas (Renovaciones próximas / Pagos recientes). El dashboard original no se reescribió — sólo se extendió.
+
+## RBAC extendida (Fase 2A)
+
+| Rol | Plans | Modules | Matriz | Subs | Pagos |
+|-----|:----:|:-------:|:------:|:----:|:-----:|
+| superadmin | ✔ | ✔ | ✔ | ✔ | ✔ |
+| commercial | R/W + status | R/W + status | R/W | R/W + status | R/W + status |
+| finance | R | R | R | R | R/W + status |
+| support | R | R | R | R + status | R |
+| developer | R | R | R | — | — |

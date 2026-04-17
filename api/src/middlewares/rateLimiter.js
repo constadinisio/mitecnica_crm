@@ -29,4 +29,17 @@ const loginLimiter = rateLimit({
   }),
 });
 
-module.exports = { globalLimiter, loginLimiter };
+// Public contact form: very strict, window = 1h, max = 10 submissions per IP.
+const publicContactLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req, res) => apiResponse.error(res, {
+    status: 429,
+    code: 'RATE_LIMIT_PUBLIC',
+    message: 'Too many submissions from this IP. Please try again later.',
+  }),
+});
+
+module.exports = { globalLimiter, loginLimiter, publicContactLimiter };

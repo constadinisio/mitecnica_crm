@@ -22,7 +22,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'current_plan_name' => trim((string)($_POST['current_plan_name'] ?? '')) ?: null,
         'expiration_date'   => trim((string)($_POST['expiration_date'] ?? '')) ?: null,
         'status'            => $_POST['status'] ?? null,
-        'technical_status'  => $_POST['technical_status'] ?? null,
     ];
     try {
         api_put("/institutions/$id", ['body' => $body]);
@@ -38,9 +37,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $institution = null;
+$availablePlans = [];
 try {
     $res = api_get("/institutions/$id");
     $institution = $res['data']['institution'] ?? null;
+    $availablePlans = api_get('/plans', ['query' => ['limit' => 100, 'status' => 'active']])['data'] ?? [];
 } catch (ApiClientException $e) {
     flash_set('error', $e->getMessage());
     redirect('/institutions');

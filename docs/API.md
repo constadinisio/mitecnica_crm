@@ -179,6 +179,105 @@ Detalle completo con `actor_name`, `actor_email`, `before_data`, `after_data`.
 
 ---
 
+## Plans (Fase 2A)
+
+Moneda por defecto **ARS**. Todos los endpoints requieren autenticación.
+
+### `GET /api/v1/plans`
+Query params: `page`, `limit`, `search`, `status` (csv), `billing_frequency`, `is_custom`, `sort`, `order`.
+
+### `GET /api/v1/plans/:id`
+### `POST /api/v1/plans`
+Body: `{ code, name, description?, billing_frequency?, price_amount?, currency_code?, status?, is_custom? }`
+### `PUT /api/v1/plans/:id`
+### `PATCH /api/v1/plans/:id/status` — Body: `{ status: "active|inactive|archived" }`
+### `GET /api/v1/plans/summary`
+Retorna `{ by_status: {active,inactive,archived}, total }`.
+
+---
+
+## Modules Catalog (Fase 2A)
+
+### `GET /api/v1/modules-catalog`
+Filtros: `status`, `category`, `is_core`, `search`.
+### `GET /api/v1/modules-catalog/:id`
+### `POST /api/v1/modules-catalog`
+Body: `{ code, name, description?, category?, status?, is_core? }`
+### `PUT /api/v1/modules-catalog/:id`
+### `PATCH /api/v1/modules-catalog/:id/status` — Body: `{ status: "active|inactive" }`
+
+---
+
+## Plan × Modules (Fase 2A)
+
+### `GET /api/v1/plan-modules/matrix`
+Response:
+```json
+{
+  "status":"success",
+  "data": {
+    "plans":   [ {id, code, name, price_amount, currency_code, billing_frequency, status} ],
+    "modules": [ {id, code, name, category, is_core, status} ],
+    "relations": { "<plan_id>": { "<module_id>": true } }
+  }
+}
+```
+
+### `GET /api/v1/plans/:id/modules`
+Response: `{ plan: {id,code,name}, module_ids: number[] }`
+
+### `PUT /api/v1/plans/:id/modules`
+Reemplaza completamente el set de módulos del plan.
+Body: `{ module_ids: number[] }`
+Audita como `plan.modules_updated` si hubo cambios.
+
+---
+
+## Subscriptions (Fase 2A)
+
+### `GET /api/v1/subscriptions`
+Filtros: `institution_id`, `plan_id`, `status`, `renewal_mode`, `search`.
+Cada fila trae `institution_name`, `institution_code`, `plan_name`, `plan_price_amount`, `plan_currency_code`.
+
+### `GET /api/v1/subscriptions/:id`
+### `POST /api/v1/subscriptions`
+Body: `{ institution_id, plan_id, status?, start_date, end_date?, trial_ends_at?, renewal_mode?, billing_notes? }`
+Valida que no exista otra suscripción **viva** (`trial`/`active`) en la misma institución.
+
+### `PUT /api/v1/subscriptions/:id`
+### `PATCH /api/v1/subscriptions/:id/status` — Body: `{ status, reason? }`
+
+### `GET /api/v1/subscriptions/summary`
+Retorna `{ counts: {total, by_status, live}, upcoming_renewals[] }` (30 días).
+
+---
+
+## Payments (Fase 2A)
+
+### `GET /api/v1/payments`
+Filtros: `institution_id`, `subscription_id`, `status`, `payment_method`, `from`, `to`, `search`.
+
+### `GET /api/v1/payments/:id`
+### `POST /api/v1/payments`
+Body: `{ institution_id, subscription_id?, amount, currency_code?, payment_date?, status?, payment_method?, reference_code?, notes? }`
+Valida que la suscripción (si viene) pertenezca a la misma institución.
+
+### `PUT /api/v1/payments/:id`
+### `PATCH /api/v1/payments/:id/status` — Body: `{ status, reason? }`
+
+### `GET /api/v1/payments/summary`
+Retorna:
+```json
+{
+  "counts": { "total": 9, "by_status": {"pending":1,"approved":6,...} },
+  "totals_all":       [{"status":"approved","currency_code":"ARS","amount":915000}, ...],
+  "totals_last_30d":  [{"status":"approved","currency_code":"ARS","amount":65000}, ...],
+  "recent":           [ /* últimos 6 pagos con join a institución/plan */ ]
+}
+```
+
+---
+
 ## Errores comunes
 
 | HTTP | Code | Significado |
