@@ -12,6 +12,8 @@ router.use(authMiddleware);
 
 router.get('/summary', authorizeRoles('support', 'commercial', 'finance', 'developer'), controller.summary);
 
+router.get('/export.csv', authorizeRoles('support', 'commercial', 'finance', 'developer'), rules.listRules, validateRequest, controller.exportCsv);
+
 router.get('/', authorizeRoles('support', 'commercial', 'finance', 'developer'), rules.listRules, validateRequest, controller.list);
 router.get('/:id', authorizeRoles('support', 'commercial', 'finance', 'developer'), rules.idRules, validateRequest, controller.getById);
 router.post('/', authorizeRoles('finance', 'commercial'), rules.createRules, validateRequest, controller.create);

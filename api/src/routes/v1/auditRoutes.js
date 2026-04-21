@@ -20,6 +20,14 @@ router.get(
 );
 
 router.get(
+  '/export.csv',
+  authorizeRoles('support', 'developer'),
+  rules.listRules,
+  validateRequest,
+  controller.exportCsv,
+);
+
+router.get(
   '/:id',
   authorizeRoles('support', 'developer'),
   rules.byIdRules,

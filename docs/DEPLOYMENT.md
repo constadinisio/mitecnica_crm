@@ -117,16 +117,21 @@ El repo trae un `output.css` funcional listo para producción. Para regenerar el
 
 ## 7. Checklist post-deploy
 
-- [ ] `GET https://crm.tu-dominio.ar/health` responde `200` con `status: ok`
+- [ ] `GET https://crm.tu-dominio.ar/health` responde `200` con `status: ok` (liveness, sin DB)
+- [ ] `GET https://crm.tu-dominio.ar/ready` responde `200` con `db.status: ok` (readiness, valida PostgreSQL)
+- [ ] `GET https://crm.tu-dominio.ar/api/v1/health` es idéntico a `/ready`
 - [ ] Login con admin funciona
-- [ ] Dashboard carga las tarjetas y tablas con datos reales
-- [ ] Listado de instituciones filtra, pagina y ordena
+- [ ] Dashboard carga las tarjetas, tablas y card "Pulso operativo" con datos reales
+- [ ] Listado de instituciones filtra, pagina, ordena y exporta CSV
+- [ ] Exportaciones `/institutions/export.csv`, `/payments/export.csv`, `/audit/export.csv` devuelven UTF-8 con BOM
+- [ ] Navegación cruzada funciona: institution ↔ subscription ↔ payment ↔ audit filtered
 - [ ] Creación y edición funcionan, disparan auditoría
 - [ ] `PATCH /:id/status` funciona y queda asentado en la auditoría
 - [ ] Password del admin cambiada
 - [ ] Backups de PostgreSQL configurados
 - [ ] PM2 corre como servicio (`pm2 startup`)
 - [ ] Logs rotando (`pm2 install pm2-logrotate`)
+- [ ] Load balancer / uptime monitor apuntando a `/health` (liveness) y alertas en `/ready` (readiness)
 
 ## 8. Troubleshooting rápido
 

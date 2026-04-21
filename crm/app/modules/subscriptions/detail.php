@@ -29,9 +29,22 @@ ob_start();
 <?php
   $title = 'Suscripción #' . $id;
   $subtitle = ($sub['institution_name'] ?? '—') . ' · ' . ($sub['plan_name'] ?? '—');
-  $breadcrumbs = [['label' => 'Dashboard', 'href' => '/dashboard'], ['label' => 'Suscripciones', 'href' => '/subscriptions'], ['label' => '#' . $id]];
+  $breadcrumbs = [
+    ['label' => 'Dashboard', 'href' => '/dashboard'],
+    ['label' => 'Suscripciones', 'href' => '/subscriptions'],
+    ['label' => '#' . $id],
+  ];
   $actionsHtml = '';
-  if (can('subscriptions.update')) $actionsHtml .= '<a href="/subscriptions/' . $id . '/edit" class="btn-secondary inline-flex">Editar</a>';
+  if (!empty($sub['institution_id'])) {
+    $actionsHtml .= '<a href="/institutions/' . (int)$sub['institution_id'] . '" class="btn-secondary h-9 text-sm inline-flex items-center">Ver institución</a> ';
+    if (can('payments.view')) {
+      $actionsHtml .= '<a href="/payments?institution_id=' . (int)$sub['institution_id'] . '&subscription_id=' . (int)$sub['id'] . '" class="btn-secondary h-9 text-sm inline-flex items-center">Pagos</a> ';
+    }
+  }
+  if (can('audit.view')) {
+    $actionsHtml .= '<a href="/audit?entity=subscriptions&entity_id=' . (int)$id . '" class="btn-secondary h-9 text-sm inline-flex items-center">Auditoría</a> ';
+  }
+  if (can('subscriptions.update')) $actionsHtml .= '<a href="/subscriptions/' . $id . '/edit" class="btn-primary h-9 text-sm inline-flex items-center">Editar</a>';
   include dirname(__DIR__, 2) . '/components/page_header.php';
 ?>
 

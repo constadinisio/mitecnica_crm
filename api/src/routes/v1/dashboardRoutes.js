@@ -14,4 +14,11 @@ router.get(
   controller.summary,
 );
 
+router.get(
+  '/operational-summary',
+  authMiddleware,
+  authorizeRoles('support', 'commercial', 'finance', 'developer'),
+  controller.operationalSummary,
+);
+
 module.exports = router;

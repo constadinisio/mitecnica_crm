@@ -2,6 +2,7 @@
 
 const express = require('express');
 const authRoutes = require('./authRoutes');
+const healthRoutes = require('./healthRoutes');
 const dashboardRoutes = require('./dashboardRoutes');
 const institutionRoutes = require('./institutionRoutes');
 const auditRoutes = require('./auditRoutes');
@@ -22,6 +23,7 @@ router.get('/', (_req, res) => res.json({
   meta: {},
 }));
 
+router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/institutions', institutionRoutes);

@@ -6,10 +6,13 @@ $list = $institutions ?? [];
 <div class="card mt-4 overflow-hidden">
   <?php if (empty($list)): ?>
     <?php
-      $title = 'Sin resultados';
-      $message = 'Probá ajustar los filtros o creá una nueva institución.';
-      $ctaLabel = can('institutions.create') ? 'Nueva institución' : null;
-      $ctaHref = can('institutions.create') ? '/institutions/new' : null;
+      $hasFilter = !empty(array_filter([$_GET['search'] ?? '', $_GET['status'] ?? '', $_GET['plan'] ?? '']));
+      $title = $hasFilter ? 'Sin resultados' : 'Ninguna institución registrada';
+      $message = $hasFilter
+        ? 'Probá ajustar los filtros o limpiar la búsqueda.'
+        : 'Cuando des de alta la primera institución, va a aparecer en esta tabla.';
+      $ctaLabel = can('institutions.create') ? ($hasFilter ? 'Nueva institución' : 'Crear primera institución') : null;
+      $ctaHref = $ctaLabel ? '/institutions/new' : null;
       include dirname(__DIR__, 3) . '/components/empty_state.php';
     ?>
   <?php else: ?>

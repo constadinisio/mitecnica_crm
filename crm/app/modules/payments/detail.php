@@ -22,7 +22,19 @@ ob_start();
   $title = 'Pago #' . $id;
   $subtitle = ($payment['institution_name'] ?? '—') . ' · ' . format_money($payment['amount'], $payment['currency_code']);
   $breadcrumbs = [['label' => 'Dashboard', 'href' => '/dashboard'], ['label' => 'Pagos', 'href' => '/payments'], ['label' => '#' . $id]];
-  $actionsHtml = can('payments.update') ? '<a href="/payments/' . $id . '/edit" class="btn-secondary inline-flex">Editar</a>' : '';
+  $actionsHtml = '';
+  if (!empty($payment['institution_id'])) {
+    $actionsHtml .= '<a href="/institutions/' . (int)$payment['institution_id'] . '" class="btn-secondary h-9 text-sm inline-flex items-center">Ver institución</a> ';
+  }
+  if (!empty($payment['subscription_id']) && can('subscriptions.view')) {
+    $actionsHtml .= '<a href="/subscriptions/' . (int)$payment['subscription_id'] . '" class="btn-secondary h-9 text-sm inline-flex items-center">Ver suscripción</a> ';
+  }
+  if (can('audit.view')) {
+    $actionsHtml .= '<a href="/audit?entity=payments&entity_id=' . (int)$id . '" class="btn-secondary h-9 text-sm inline-flex items-center">Auditoría</a> ';
+  }
+  if (can('payments.update')) {
+    $actionsHtml .= '<a href="/payments/' . $id . '/edit" class="btn-primary h-9 text-sm inline-flex items-center">Editar</a>';
+  }
   include dirname(__DIR__, 2) . '/components/page_header.php';
 ?>
 <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

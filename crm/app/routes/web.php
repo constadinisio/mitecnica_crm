@@ -42,6 +42,7 @@ $routes = [
     ['GET',  '^/dashboard$',                      fn() => require "$MODULES/dashboard/index.php"],
 
     ['GET',  '^/institutions$',                   fn() => require "$MODULES/institutions/list.php"],
+    ['GET',  '^/institutions/export\.csv$',       fn() => require "$MODULES/institutions/export_csv.php"],
     ['GET',  '^/institutions/new$',               fn() => require "$MODULES/institutions/create.php"],
     ['POST', '^/institutions/new$',               fn() => require "$MODULES/institutions/create.php"],
     ['GET',  '^/institutions/(?P<id>\d+)$',       fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/institutions/detail.php"; })($m['id'])],
@@ -81,6 +82,7 @@ $routes = [
 
     // Payments
     ['GET',  '^/payments$',                       fn() => require "$MODULES/payments/list.php"],
+    ['GET',  '^/payments/export\.csv$',           fn() => require "$MODULES/payments/export_csv.php"],
     ['GET',  '^/payments/new$',                   fn() => require "$MODULES/payments/create.php"],
     ['POST', '^/payments/new$',                   fn() => require "$MODULES/payments/create.php"],
     ['GET',  '^/payments/(?P<id>\d+)$',           fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/payments/detail.php"; })($m['id'])],
@@ -90,6 +92,7 @@ $routes = [
 
     // Audit
     ['GET',  '^/audit$',                          fn() => require "$MODULES/audit/list.php"],
+    ['GET',  '^/audit/export\.csv$',              fn() => require "$MODULES/audit/export_csv.php"],
     ['GET',  '^/audit/(?P<id>\d+)$',              fn($m) => (function($id) use ($MODULES) { $_GET['id'] = $id; require "$MODULES/audit/detail.php"; })($m['id'])],
 ];
 

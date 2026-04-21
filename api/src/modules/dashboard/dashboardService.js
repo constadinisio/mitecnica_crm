@@ -6,4 +6,8 @@ async function summary() {
   return repo.summary();
 }
 
-module.exports = { summary };
+async function operationalSummary(opts = {}) {
+  return repo.operationalSummary(opts);
+}
+
+module.exports = { summary, operationalSummary };

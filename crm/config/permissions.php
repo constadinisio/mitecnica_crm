@@ -43,4 +43,8 @@ return [
     'audit.view'                 => ['superadmin', 'support', 'developer'],
     'users_crm.manage'           => ['superadmin'],
     'settings.manage'            => ['superadmin'],
+
+    'exports.institutions'       => ['superadmin', 'support', 'commercial', 'finance', 'developer'],
+    'exports.payments'           => ['superadmin', 'support', 'commercial', 'finance'],
+    'exports.audit'              => ['superadmin', 'support', 'developer'],
 ];

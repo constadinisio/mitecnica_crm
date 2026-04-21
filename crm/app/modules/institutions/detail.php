@@ -60,8 +60,17 @@ ob_start();
     ['label' => $institution['public_code']],
   ];
   $actionsHtml = '';
+  if (can('audit.view')) {
+    $actionsHtml .= '<a href="/audit?entity=institutions&entity_id=' . (int)$institution['id'] . '" class="btn-secondary inline-flex h-9 text-sm items-center">Auditoría</a> ';
+  }
+  if (can('subscriptions.view')) {
+    $actionsHtml .= '<a href="/subscriptions?institution_id=' . (int)$institution['id'] . '" class="btn-secondary inline-flex h-9 text-sm items-center">Suscripciones</a> ';
+  }
+  if (can('payments.view')) {
+    $actionsHtml .= '<a href="/payments?institution_id=' . (int)$institution['id'] . '" class="btn-secondary inline-flex h-9 text-sm items-center">Pagos</a> ';
+  }
   if (can('institutions.update')) {
-    $actionsHtml .= '<a href="/institutions/' . (int)$institution['id'] . '/edit" class="btn-secondary inline-flex">Editar</a>';
+    $actionsHtml .= '<a href="/institutions/' . (int)$institution['id'] . '/edit" class="btn-primary inline-flex h-9 text-sm items-center">Editar</a>';
   }
   include dirname(__DIR__, 2) . '/components/page_header.php';
 ?>

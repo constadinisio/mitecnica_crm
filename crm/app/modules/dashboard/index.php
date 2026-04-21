@@ -34,10 +34,12 @@ $plansSummary = null;
 $subsSummary = null;
 $paySummary = null;
 $leadsSummary = null;
+$opsSummary = null;
 try { $plansSummary = api_get('/plans/summary')['data'] ?? null; } catch (Throwable) {}
 try { $subsSummary = api_get('/subscriptions/summary')['data'] ?? null; } catch (Throwable) {}
 try { $paySummary = api_get('/payments/summary')['data'] ?? null; } catch (Throwable) {}
 try { $leadsSummary = api_get('/leads/summary')['data'] ?? null; } catch (Throwable) {}
+try { $opsSummary  = api_get('/dashboard/operational-summary')['data'] ?? null; } catch (Throwable) {}
 
 function arsApprovedTotal30d(?array $ps): float {
     if (!$ps) return 0.0;
@@ -370,6 +372,46 @@ ob_start();
     </ul>
   </div>
 </section>
+
+<?php if ($opsSummary): ?>
+<section class="mt-6">
+  <div class="card">
+    <div class="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
+      <div>
+        <h3 class="text-sm font-semibold text-white">Pulso operativo</h3>
+        <p class="text-xs text-slate-400">
+          Últimas <?= (int)($opsSummary['window']['hours'] ?? 24) ?> h · altas y pagos de los últimos <?= (int)($opsSummary['window']['recent_days'] ?? 7) ?> días.
+          <?php if (can('audit.view')): ?>
+            · <a href="/audit" class="text-brand-300 hover:text-brand-200">Ver auditoría completa →</a>
+          <?php endif; ?>
+        </p>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 divide-x divide-slate-800/60">
+      <?php
+        $items = [
+          ['label' => 'Eventos auditados',   'value' => (int)($opsSummary['audit_events_last_window'] ?? 0),     'hint' => 'acciones registradas'],
+          ['label' => 'Eventos de auth',     'value' => (int)($opsSummary['auth_events_last_window'] ?? 0),      'hint' => 'login / refresh'],
+          ['label' => 'Logins fallidos',     'value' => (int)($opsSummary['login_failures_last_window'] ?? 0),   'hint' => 'auth.login_failed', 'accent' => 'rose'],
+          ['label' => 'Altas de instituciones', 'value' => (int)($opsSummary['institutions_created_recent'] ?? 0), 'hint' => 'en ventana reciente'],
+          ['label' => 'Pagos nuevos',        'value' => (int)($opsSummary['payments_created_recent'] ?? 0),      'hint' => 'en ventana reciente'],
+          ['label' => 'Overrides activos',   'value' => (int)($opsSummary['active_overrides'] ?? 0),             'hint' => 'instituciones con overrides'],
+          ['label' => 'Usuarios CRM activos','value' => (int)($opsSummary['active_crm_users'] ?? 0),             'hint' => 'cuentas habilitadas'],
+        ];
+        foreach ($items as $it):
+          $accent = $it['accent'] ?? 'slate';
+          $colorCls = $accent === 'rose' && $it['value'] > 0 ? 'text-rose-300' : 'text-white';
+      ?>
+        <div class="px-5 py-4">
+          <div class="text-xs text-slate-500 uppercase tracking-wider"><?= e($it['label']) ?></div>
+          <div class="mt-1 text-xl font-semibold <?= $colorCls ?> tabular-nums"><?= (int)$it['value'] ?></div>
+          <div class="text-xs text-slate-500 mt-0.5"><?= e($it['hint']) ?></div>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</section>
+<?php endif; ?>
 
 <?php
 $content = ob_get_clean();

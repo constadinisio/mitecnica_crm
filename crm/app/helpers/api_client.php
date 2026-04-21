@@ -104,6 +104,84 @@ if (!function_exists('api_request')) {
     }
 }
 
+if (!function_exists('api_stream')) {
+    /**
+     * Proxy-download a binary/CSV endpoint from the API to the browser.
+     * Keeps the Bearer token out of the client and preserves headers like
+     * Content-Type and Content-Disposition.
+     */
+    function api_stream(string $path, array $query = [], string $fallbackMime = 'application/octet-stream'): void {
+        $url = api_base_url() . '/' . ltrim($path, '/');
+        if (!empty($query)) {
+            $url .= (str_contains($url, '?') ? '&' : '?') . http_build_query($query);
+        }
+
+        $token = session_get('access_token');
+        $headers = [
+            'Accept: */*',
+            'X-Request-Id: ' . bin2hex(random_bytes(8)),
+        ];
+        if ($token) $headers[] = 'Authorization: Bearer ' . $token;
+
+        $ch = curl_init($url);
+        $passthrough = [];
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_TIMEOUT        => 60,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_HEADERFUNCTION => function ($_c, string $line) use (&$passthrough) {
+                $trim = trim($line);
+                if ($trim === '' || stripos($trim, 'HTTP/') === 0) return strlen($line);
+                $parts = explode(':', $trim, 2);
+                if (count($parts) === 2) {
+                    $k = strtolower(trim($parts[0]));
+                    $v = trim($parts[1]);
+                    if (in_array($k, ['content-type', 'content-disposition', 'cache-control'], true)) {
+                        $passthrough[$k] = $v;
+                    }
+                }
+                return strlen($line);
+            },
+        ]);
+
+        $body = curl_exec($ch);
+        $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        $err = curl_error($ch);
+        curl_close($ch);
+
+        if ($body === false) {
+            http_response_code(502);
+            echo 'Export backend unreachable: ' . htmlspecialchars($err, ENT_QUOTES);
+            return;
+        }
+
+        if ($status === 401) {
+            if (api_try_refresh_token()) { api_stream($path, $query, $fallbackMime); return; }
+            http_response_code(401);
+            echo 'Session expired';
+            return;
+        }
+
+        if ($status >= 400) {
+            http_response_code($status);
+            header('Content-Type: application/json; charset=utf-8');
+            echo $body;
+            return;
+        }
+
+        http_response_code($status ?: 200);
+        header('Content-Type: ' . ($passthrough['content-type'] ?? $fallbackMime));
+        if (isset($passthrough['content-disposition'])) {
+            header('Content-Disposition: ' . $passthrough['content-disposition']);
+        }
+        header('Cache-Control: ' . ($passthrough['cache-control'] ?? 'no-store'));
+        echo $body;
+    }
+}
+
 if (!function_exists('api_get'))    { function api_get(string $p, array $o = []): array { return api_request('GET',    $p, $o); } }
 if (!function_exists('api_post'))   { function api_post(string $p, array $o = []): array { return api_request('POST',   $p, $o); } }
 if (!function_exists('api_put'))    { function api_put(string $p, array $o = []): array { return api_request('PUT',    $p, $o); } }

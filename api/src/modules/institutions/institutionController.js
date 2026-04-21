@@ -5,6 +5,7 @@ const pagination = require('../../utils/pagination');
 const apiResponse = require('../../utils/apiResponse');
 const auditMeta = require('../../utils/auditMetadata');
 const auditRepo = require('../audit/auditRepository');
+const { writeCsv } = require('../../utils/csvExport');
 
 async function list(req, res, next) {
   try {
@@ -57,4 +58,35 @@ async function changeStatus(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { list, getById, create, update, changeStatus };
+async function exportCsv(req, res, next) {
+  try {
+    const result = await service.listPaginated({
+      query: req.query,
+      page: 1,
+      limit: 5000,
+      offset: 0,
+    });
+    await writeCsv(res, {
+      filename: `institutions-${new Date().toISOString().slice(0, 10)}`,
+      fields: [
+        { key: 'id', header: 'id' },
+        { key: 'public_code', header: 'public_code' },
+        { key: 'name', header: 'name' },
+        { key: 'slug', header: 'slug' },
+        { key: 'subdomain', header: 'subdomain' },
+        { key: 'status', header: 'status' },
+        { key: 'technical_status', header: 'technical_status' },
+        { key: 'contact_email', header: 'contact_email' },
+        { key: 'contact_phone', header: 'contact_phone' },
+        { key: 'responsible_name', header: 'responsible_name' },
+        { key: 'current_plan_name', header: 'current_plan' },
+        { key: 'expiration_date', header: 'expiration_date' },
+        { key: 'created_at', header: 'created_at' },
+        { key: 'updated_at', header: 'updated_at' },
+      ],
+      rows: result.rows,
+    });
+  } catch (err) { next(err); }
+}
+
+module.exports = { list, getById, create, update, changeStatus, exportCsv };

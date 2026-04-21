@@ -5,10 +5,13 @@ $list = $subs ?? [];
 <div class="card mt-4 overflow-hidden">
   <?php if (empty($list)): ?>
     <?php
-      $title = 'Sin suscripciones';
-      $message = 'Creá una suscripción para empezar.';
-      $ctaLabel = can('subscriptions.create') ? 'Nueva suscripción' : null;
-      $ctaHref = can('subscriptions.create') ? '/subscriptions/new' : null;
+      $hasFilter = !empty(array_filter([$_GET['search'] ?? '', $_GET['status'] ?? '', $_GET['institution_id'] ?? '', $_GET['plan_id'] ?? '', $_GET['renewal_mode'] ?? '']));
+      $title = $hasFilter ? 'Sin resultados' : 'Sin suscripciones';
+      $message = $hasFilter
+        ? 'Ninguna suscripción coincide con los filtros aplicados.'
+        : 'Cuando asignes un plan a una institución creando una suscripción, va a aparecer acá.';
+      $ctaLabel = (!$hasFilter && can('subscriptions.create')) ? 'Nueva suscripción' : null;
+      $ctaHref = $ctaLabel ? '/subscriptions/new' : null;
       include dirname(__DIR__, 3) . '/components/empty_state.php';
     ?>
   <?php else: ?>

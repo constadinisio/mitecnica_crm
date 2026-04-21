@@ -126,4 +126,51 @@ async function summary() {
   };
 }
 
-module.exports = { summary };
+/**
+ * Lightweight operational snapshot. Small counters that describe
+ * "how busy the CRM has been recently" — not DevOps/infra observability.
+ */
+async function operationalSummary({ windowHours = 24, recentDays = 7 } = {}) {
+  const since = new Date(Date.now() - windowHours * 60 * 60 * 1000);
+  const sinceDays = new Date(Date.now() - recentDays * 24 * 60 * 60 * 1000);
+
+  const [
+    auditLast,
+    loginFailuresLast,
+    authActivityLast,
+    institutionsRecent,
+    paymentsRecent,
+    overridesActive,
+    usersActive,
+  ] = await Promise.all([
+    db('audit_logs').where('created_at', '>=', since).count({ c: '*' }).first(),
+    db('audit_logs')
+      .where('created_at', '>=', since)
+      .whereIn('action', ['auth.login_failed', 'auth.password_reset_failed'])
+      .count({ c: '*' })
+      .first(),
+    db('audit_logs')
+      .where('created_at', '>=', since)
+      .where('entity', 'auth')
+      .count({ c: '*' })
+      .first(),
+    db('institutions').where('created_at', '>=', sinceDays).count({ c: '*' }).first(),
+    db('payments').where('created_at', '>=', sinceDays).count({ c: '*' }).first(),
+    db('institution_modules').count({ c: '*' }).first().catch(() => ({ c: 0 })),
+    db('crm_users').where({ is_active: true }).count({ c: '*' }).first().catch(() => ({ c: 0 })),
+  ]);
+
+  return {
+    window: { hours: windowHours, recent_days: recentDays, since: since.toISOString(), since_days: sinceDays.toISOString() },
+    audit_events_last_window: Number(auditLast?.c || 0),
+    auth_events_last_window: Number(authActivityLast?.c || 0),
+    login_failures_last_window: Number(loginFailuresLast?.c || 0),
+    institutions_created_recent: Number(institutionsRecent?.c || 0),
+    payments_created_recent: Number(paymentsRecent?.c || 0),
+    active_overrides: Number(overridesActive?.c || 0),
+    active_crm_users: Number(usersActive?.c || 0),
+    generated_at: new Date().toISOString(),
+  };
+}
+
+module.exports = { summary, operationalSummary };

@@ -5,10 +5,13 @@ $list = $payments ?? [];
 <div class="card mt-4 overflow-hidden">
   <?php if (empty($list)): ?>
     <?php
-      $title = 'Sin pagos';
-      $message = 'Creá un pago para empezar.';
-      $ctaLabel = can('payments.create') ? 'Nuevo pago' : null;
-      $ctaHref = can('payments.create') ? '/payments/new' : null;
+      $hasFilter = !empty(array_filter([$_GET['search'] ?? '', $_GET['status'] ?? '', $_GET['institution_id'] ?? '', $_GET['from'] ?? '', $_GET['to'] ?? '']));
+      $title = $hasFilter ? 'Sin resultados' : 'Sin pagos registrados';
+      $message = $hasFilter
+        ? 'Ningún pago coincide con los filtros aplicados. Probá con otro rango de fechas o estado.'
+        : 'Cuando registres pagos asociados a una institución o suscripción, aparecerán en esta tabla.';
+      $ctaLabel = (!$hasFilter && can('payments.create')) ? 'Registrar primer pago' : null;
+      $ctaHref = $ctaLabel ? '/payments/new' : null;
       include dirname(__DIR__, 3) . '/components/empty_state.php';
     ?>
   <?php else: ?>

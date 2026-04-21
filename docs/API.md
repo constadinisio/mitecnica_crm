@@ -30,13 +30,59 @@ Códigos HTTP estándar. Campos comunes: `meta.pagination` para listados.
 
 ---
 
-## Health
+## Health / Observabilidad ligera (Fase 2C)
 
 ### `GET /health`
-Respuesta:
+Liveness sin DB. Ideal para load balancer.
 ```json
-{ "status":"success", "data":{ "status":"ok","name":"mi-tecnica-crm-api","env":"development","time":"..." } }
+{ "status":"success", "data":{ "status":"ok","name":"mi-tecnica-crm-api","env":"development","time":"...","uptime_seconds":120 } }
 ```
+
+### `GET /ready` · `GET /api/v1/health`
+Readiness con round-trip a PostgreSQL. Responde `200` si DB OK, `503` si falla.
+```json
+{
+  "status": "success",
+  "data": {
+    "status": "ok",
+    "name": "mi-tecnica-crm-api",
+    "env": "production",
+    "time": "2026-04-17T14:32:10.000Z",
+    "uptime_seconds": 3600,
+    "db": { "status": "ok", "error": null, "check_ms": 3 }
+  }
+}
+```
+
+### `GET /api/v1/dashboard/operational-summary`
+Métricas simples del CRM para el dashboard interno. Roles: `support`, `commercial`, `finance`, `developer`, `superadmin`.
+
+Query params opcionales:
+
+| Param | Tipo | Default | Rango |
+|-------|------|---------|-------|
+| `window_hours` | int | 24 | 1–168 |
+| `recent_days` | int | 7 | 1–60 |
+
+Response (ejemplo):
+```json
+{
+  "status": "success",
+  "data": {
+    "window": { "hours": 24, "recent_days": 7, "since": "...", "since_days": "..." },
+    "audit_events_last_window": 42,
+    "auth_events_last_window": 17,
+    "login_failures_last_window": 0,
+    "institutions_created_recent": 1,
+    "payments_created_recent": 3,
+    "active_overrides": 2,
+    "active_crm_users": 4,
+    "generated_at": "..."
+  }
+}
+```
+
+No reemplaza a observabilidad DevOps — es sólo "pulso operativo" para operadores internos.
 
 ---
 
@@ -391,6 +437,25 @@ Roles: `support`, `commercial`, `finance`, `developer`, `superadmin`.
 ```
 
 MRR se estima normalizando `price_amount` por frecuencia: `monthly × 1`, `quarterly ÷ 3`, `yearly ÷ 12`, `custom` tratado como mensual.
+
+---
+
+## Exportaciones CSV (Fase 2C)
+
+Tres endpoints emiten CSV con BOM UTF-8 listo para Excel/LibreOffice. Respetan los mismos filtros de la lista correspondiente (búsqueda, estado, fechas, etc.).
+
+| Endpoint | Roles | Fields principales |
+|----------|-------|--------------------|
+| `GET /api/v1/institutions/export.csv` | `support`, `commercial`, `finance`, `developer`, `superadmin` | id, public_code, name, subdomain, status, plan, expiration |
+| `GET /api/v1/payments/export.csv` | `support`, `commercial`, `finance`, `superadmin` | id, institution_code, amount, currency, status, method, date |
+| `GET /api/v1/audit-logs/export.csv` | `support`, `developer`, `superadmin` | id, action, entity, entity_id, description, actor, ip |
+
+Respuesta:
+- `Content-Type: text/csv; charset=utf-8`
+- `Content-Disposition: attachment; filename="institutions-YYYY-MM-DD.csv"`
+- Límite duro: 5.000 filas por export (se aplica después de filtros).
+
+En el CRM PHP, las rutas equivalentes (`/institutions/export.csv`, `/payments/export.csv`, `/audit/export.csv`) proxyean la descarga inyectando el Bearer desde la sesión.
 
 ---
 

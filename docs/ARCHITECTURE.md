@@ -1,4 +1,4 @@
-# Arquitectura — Mi Tecnica CRM (Fase 1)
+# Arquitectura — Mi Tecnica CRM
 
 ## Vista general
 
@@ -208,3 +208,53 @@ El plan activo se determina vía la única `subscription` viva (status ∈ {`tri
 | support | ✔ | — | ✔ |
 | finance | ✔ | — | — |
 | developer | ✔ | — | ✔ |
+
+## Fase 2C — Hardening, UX y observabilidad ligera
+
+Fase de pulido. No agrega módulos nuevos del producto — endurece lo existente.
+
+### Nuevos endpoints (no reemplazan nada)
+
+- `GET /health` — liveness (sin DB).
+- `GET /ready` · `GET /api/v1/health` — readiness con round-trip a PostgreSQL. Responde `503` si la DB falla.
+- `GET /api/v1/dashboard/operational-summary` — métricas simples del CRM (no DevOps):
+  eventos auditados recientes, intentos fallidos de login, altas de instituciones / pagos, overrides activos, usuarios CRM habilitados. Ventana configurable por query (`window_hours`, `recent_days`).
+
+### Exportaciones CSV
+
+Tres endpoints nuevos de la API y tres rutas del CRM que proxyean la descarga con el Bearer de sesión:
+
+| API | CRM (proxy) |
+|-----|-------------|
+| `GET /api/v1/institutions/export.csv` | `/institutions/export.csv` |
+| `GET /api/v1/payments/export.csv`     | `/payments/export.csv` |
+| `GET /api/v1/audit-logs/export.csv`   | `/audit/export.csv` |
+
+Emiten UTF-8 con BOM para Excel, respetan filtros de la lista y tienen límite de 5.000 filas. Permisos:
+`exports.institutions`, `exports.payments`, `exports.audit` — espejados en `crm/config/permissions.php` y backend `authorizeRoles`.
+
+### Navegación cruzada y UX
+
+- `institution/:id` y `payment/:id` y `subscription/:id` ganan botones contextuales en el header: ir a institución, a suscripción relacionada, al histórico de pagos, y a auditoría filtrada por esa entidad.
+- `/audit` gana **chips de entidad** (atajos) + **badges de color por tipo de acción** (`created`, `updated`, `status`, `login`, `login_failed`, `deleted`).
+- `/audit/:id` gana un **diff compacto** campo por campo (flatten + comparación antes/después) además del JSON crudo.
+- Todos los empty states diferencian "sin datos" vs "sin resultados para los filtros aplicados".
+
+### Dashboard — "Pulso operativo"
+
+Card nueva al pie del dashboard, sólo render si el endpoint `operational-summary` responde OK. No reemplaza las cards comerciales.
+
+### RBAC Fase 2C (export)
+
+| Rol | Export institutions | Export payments | Export audit |
+|-----|:---:|:---:|:---:|
+| superadmin | ✔ | ✔ | ✔ |
+| commercial | ✔ | ✔ | — |
+| support | ✔ | ✔ | ✔ |
+| finance | ✔ | ✔ | — |
+| developer | ✔ | — | ✔ |
+
+### Errores / logging
+
+- `errorHandler` ya diferencia `warn` (4xx) de `error` (5xx); no se cambia el contrato público — se mantienen `401 UNAUTHORIZED`, `403 FORBIDDEN`, `422 VALIDATION`, `429 RATE_LIMIT`.
+- `requestLogger` sigue usando `morgan` → `logger`. En producción formato `combined`; en dev `dev`.
