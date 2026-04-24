@@ -3,7 +3,11 @@
 const ApiError = require('../../utils/ApiError');
 const repo = require('./subscriptionRepository');
 const plansRepo = require('../plans/planRepository');
+const institutionsRepo = require('../institutions/institutionRepository');
 const auditService = require('../audit/auditService');
+const webhookEmitter = require('../webhookEmitter/webhookEmitterService');
+const tenantMapper = require('../webhookEmitter/tenantEventMapper');
+const logger = require('../../config/logger');
 
 const ALLOWED_STATUS = ['trial', 'active', 'suspended', 'expired', 'canceled'];
 const ALLOWED_RENEWAL = ['manual', 'automatic'];
@@ -46,6 +50,48 @@ async function ensureNoLiveConflict({ institutionId, excludeId = null, desiredSt
   }
 }
 
+/**
+ * Notifica al tenant que cambió el plan y/o los módulos efectivos. Lo usamos
+ * tanto al crear/actualizar suscripción como al cambiar status. Encolamos dos
+ * eventos separados porque del lado mitecnica son dos campos distintos en
+ * `control.tenants` (plan + modulos_activos).
+ *
+ * Importamos institutionModuleService lazy para evitar ciclos de require
+ * (el módulo ya pulla de subscriptionRepo).
+ */
+async function emitPlanAndModulesChanged(institutionId) {
+  try {
+    const institution = await institutionsRepo.findById(institutionId);
+    if (!institution) return;
+
+    // require lazy — safe porque este code path corre post-boot.
+    const institutionModuleService = require('../institutionModules/institutionModuleService');
+    const [live, effective] = await Promise.all([
+      repo.findLiveForInstitution(institutionId),
+      institutionModuleService.getEffectiveModules(institutionId).catch(() => null),
+    ]);
+
+    const plan = live ? await plansRepo.findById(live.plan_id) : null;
+    const moduleCodes = effective ? tenantMapper.extractActiveModuleCodes(effective) : [];
+
+    await Promise.all([
+      webhookEmitter.enqueue({
+        event: 'tenant.plan_changed',
+        payload: tenantMapper.buildPlanChangedPayload(institution, plan),
+      }),
+      webhookEmitter.enqueue({
+        event: 'tenant.modules_changed',
+        payload: tenantMapper.buildModulesChangedPayload(institution, moduleCodes),
+      }),
+    ]);
+  } catch (err) {
+    logger.error(
+      '[subscriptionService] emitPlanAndModulesChanged falló para institution=%d: %s',
+      institutionId, err.message
+    );
+  }
+}
+
 async function create(data, { actor, ip, userAgent }) {
   if (!data.institution_id) throw ApiError.badRequest('institution_id is required');
   if (!data.plan_id) throw ApiError.badRequest('plan_id is required');
@@ -75,6 +121,11 @@ async function create(data, { actor, ip, userAgent }) {
     description: `Suscripción creada para institución ${row.institution_id} (plan "${plan.name}")`,
     afterData: row, ip, userAgent,
   });
+
+  // Si la suscripción nació "live" (trial|active), ya cambia lo que el tenant ve.
+  if (LIVE_STATUSES.includes(status)) {
+    await emitPlanAndModulesChanged(row.institution_id);
+  }
   return row;
 }
 
@@ -107,6 +158,15 @@ async function update(id, data, { actor, ip, userAgent }) {
     description: `Suscripción #${id} actualizada`,
     beforeData: existing, afterData: row, ip, userAgent,
   });
+
+  // Si cambió el plan o si el status cambió de/hacia "live", los módulos
+  // efectivos pueden haber cambiado → notificar.
+  const planChanged = patch.plan_id && patch.plan_id !== existing.plan_id;
+  const liveChanged =
+    patch.status && LIVE_STATUSES.includes(patch.status) !== LIVE_STATUSES.includes(existing.status);
+  if (planChanged || liveChanged) {
+    await emitPlanAndModulesChanged(row.institution_id);
+  }
   return row;
 }
 
@@ -127,6 +187,14 @@ async function changeStatus(id, newStatus, { actor, ip, userAgent, reason = null
     afterData: { status: newStatus, reason },
     ip, userAgent,
   });
+
+  // Un cambio de status puede pasar la subscription de "live" a "no live" o viceversa,
+  // lo que altera el plan/módulos efectivos del lado tenant.
+  const wasLive = LIVE_STATUSES.includes(existing.status);
+  const isLive = LIVE_STATUSES.includes(newStatus);
+  if (wasLive !== isLive) {
+    await emitPlanAndModulesChanged(existing.institution_id);
+  }
   return row;
 }
 

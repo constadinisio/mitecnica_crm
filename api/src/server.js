@@ -4,6 +4,7 @@ const app = require('./app');
 const env = require('./config/env');
 const logger = require('./config/logger');
 const { verifyConnection, closeConnection } = require('./config/db');
+const webhookDispatcher = require('./jobs/webhookDispatcher');
 
 async function start() {
   await verifyConnection();
@@ -11,8 +12,11 @@ async function start() {
     logger.info('[api] listening on http://localhost:%d (%s)', env.port, env.nodeEnv);
   });
 
+  webhookDispatcher.start();
+
   const shutdown = async (signal) => {
     logger.info('[api] received %s, shutting down', signal);
+    webhookDispatcher.stop();
     server.close(async () => {
       try {
         await closeConnection();

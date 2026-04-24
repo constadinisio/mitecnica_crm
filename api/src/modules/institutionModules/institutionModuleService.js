@@ -9,6 +9,9 @@ const plansRepo = require('../plans/planRepository');
 const subscriptionRepo = require('../subscriptions/subscriptionRepository');
 const paymentRepo = require('../payments/paymentRepository');
 const auditService = require('../audit/auditService');
+const webhookEmitter = require('../webhookEmitter/webhookEmitterService');
+const tenantMapper = require('../webhookEmitter/tenantEventMapper');
+const logger = require('../../config/logger');
 
 const ALLOWED_OVERRIDE_MODES = ['force_enabled', 'force_disabled'];
 
@@ -166,7 +169,23 @@ async function replaceOverrides(institutionId, overrides, { actor, ip, userAgent
     });
   }
 
-  return getEffectiveModules(institutionId);
+  const effective = await getEffectiveModules(institutionId);
+
+  if (changed) {
+    try {
+      await webhookEmitter.enqueue({
+        event: 'tenant.modules_changed',
+        payload: tenantMapper.buildModulesChangedPayload(
+          institution,
+          tenantMapper.extractActiveModuleCodes(effective)
+        ),
+      });
+    } catch (err) {
+      logger.error('[institutionModuleService] enqueue tenant.modules_changed falló: %s', err.message);
+    }
+  }
+
+  return effective;
 }
 
 /**

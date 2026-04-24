@@ -53,6 +53,16 @@ const env = {
   logging: {
     level: process.env.LOG_LEVEL || 'info',
   },
+
+  integration: {
+    tenantWebhookUrl: process.env.TENANT_WEBHOOK_URL || '',
+    crmWebhookSecret: process.env.CRM_WEBHOOK_SECRET || '',
+    mitecnicaSyncApiKey: process.env.MITECNICA_SYNC_API_KEY || '',
+    webhookDispatcherEnabled: bool(process.env.WEBHOOK_DISPATCHER_ENABLED, true),
+    webhookDispatcherIntervalMs: toInt(process.env.WEBHOOK_DISPATCHER_INTERVAL_MS, 30000),
+    webhookHttpTimeoutMs: toInt(process.env.WEBHOOK_HTTP_TIMEOUT_MS, 10000),
+    webhookMaxAttempts: toInt(process.env.WEBHOOK_MAX_ATTEMPTS, 8),
+  },
 };
 
 env.isProd = env.nodeEnv === 'production';

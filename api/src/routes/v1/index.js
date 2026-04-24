@@ -13,6 +13,7 @@ const subscriptionRoutes = require('./subscriptionRoutes');
 const paymentRoutes = require('./paymentRoutes');
 const publicRoutes = require('./publicRoutes');
 const leadRoutes = require('./leadRoutes');
+const tenantIntegrationRoutes = require('./tenantIntegrationRoutes');
 
 const router = express.Router();
 
@@ -35,5 +36,6 @@ router.use('/subscriptions', subscriptionRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/public', publicRoutes);
 router.use('/leads', leadRoutes);
+router.use('/integration', tenantIntegrationRoutes);
 
 module.exports = router;

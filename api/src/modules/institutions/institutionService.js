@@ -4,6 +4,9 @@ const ApiError = require('../../utils/ApiError');
 const { slugify } = require('../../utils/slug');
 const repo = require('./institutionRepository');
 const auditService = require('../audit/auditService');
+const webhookEmitter = require('../webhookEmitter/webhookEmitterService');
+const tenantMapper = require('../webhookEmitter/tenantEventMapper');
+const logger = require('../../config/logger');
 
 const ALLOWED_STATUS = ['trial', 'active', 'maintenance', 'suspended', 'expired', 'inactive'];
 const ALLOWED_TECH_STATUS = ['pending', 'optimal', 'updating', 'offline'];
@@ -109,6 +112,18 @@ async function create(data, { actor, ip, userAgent }) {
     userAgent,
   });
 
+  // Notificar a la tenant app. Fire-and-forget hacia el outbox: si el enqueue
+  // falla no queremos bloquear la creación de la institución (el reconciliador
+  // diario es el safety net). Si el enqueue persiste, el dispatcher hace retry.
+  try {
+    await webhookEmitter.enqueue({
+      event: 'tenant.created',
+      payload: tenantMapper.buildCreatedPayload(row),
+    });
+  } catch (err) {
+    logger.error('[institutionService] enqueue tenant.created falló: %s', err.message);
+  }
+
   return row;
 }
 
@@ -176,6 +191,23 @@ async function changeStatus(id, newStatus, { actor, ip, userAgent, reason = null
     ip,
     userAgent,
   });
+
+  // Mapear el cambio de status CRM al evento tenant correspondiente.
+  // Ej: trial→active no emite nada (ambos son "activo" para mitecnica).
+  const eventName = tenantMapper.mapInstitutionStatusChange(existing.status, newStatus);
+  if (eventName) {
+    const payloadBuilder = {
+      'tenant.suspended': () => tenantMapper.buildSuspendedPayload(row, reason),
+      'tenant.reactivated': () => tenantMapper.buildReactivatedPayload(row),
+      'tenant.archived': () => tenantMapper.buildArchivedPayload(row),
+    }[eventName];
+    try {
+      await webhookEmitter.enqueue({ event: eventName, payload: payloadBuilder() });
+    } catch (err) {
+      logger.error('[institutionService] enqueue %s falló: %s', eventName, err.message);
+    }
+  }
+
   return row;
 }
 
