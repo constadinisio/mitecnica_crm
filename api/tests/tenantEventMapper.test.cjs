@@ -95,6 +95,44 @@ test('buildCreatedPayload: usa subdomain como codigo y crm_id', () => {
   });
 });
 
+test('buildCreatedPayload: incluye admin si la institución tiene responsible_email', () => {
+  const p = buildCreatedPayload({
+    ...baseInstitution,
+    responsible_name: 'Juan Pérez',
+    responsible_email: 'juan.perez@escuela.edu.ar',
+  });
+  assert.deepEqual(p.admin, {
+    nombre: 'Juan',
+    apellido: 'Pérez',
+    email: 'juan.perez@escuela.edu.ar',
+  });
+});
+
+test('buildCreatedPayload: usa contact_email como fallback si no hay responsible_email', () => {
+  const p = buildCreatedPayload({
+    ...baseInstitution,
+    contact_email: 'admin@escuela.edu.ar',
+  });
+  assert.equal(p.admin?.email, 'admin@escuela.edu.ar');
+  assert.equal(p.admin?.nombre, 'Administrador');
+  assert.equal(p.admin?.apellido, '');
+});
+
+test('buildCreatedPayload: nombre completo con varios apellidos se splittea por primer espacio', () => {
+  const p = buildCreatedPayload({
+    ...baseInstitution,
+    responsible_name: 'María José García López',
+    responsible_email: 'maria@x.com',
+  });
+  assert.equal(p.admin.nombre, 'María');
+  assert.equal(p.admin.apellido, 'José García López');
+});
+
+test('buildCreatedPayload: sin email no incluye admin', () => {
+  const p = buildCreatedPayload(baseInstitution);
+  assert.equal(p.admin, undefined);
+});
+
 test('buildSuspendedPayload: incluye motivo si viene', () => {
   assert.deepEqual(
     buildSuspendedPayload(baseInstitution, 'Falta pago febrero'),

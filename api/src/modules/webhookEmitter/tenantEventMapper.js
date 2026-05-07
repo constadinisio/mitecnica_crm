@@ -46,15 +46,51 @@ function mapInstitutionStatusChange(oldStatus, newStatus) {
 }
 
 /**
+ * Si la institución tiene responsible_email (o contact_email como fallback),
+ * extrae nombre/apellido del `responsible_name` y arma el bloque `admin` que
+ * el tenant usa para crear el primer usuario admin + welcome email.
+ *
+ * Devuelve null si no hay email aprovechable; en ese caso el tenant queda
+ * provisionado sin admin y el operador puede crearlo manualmente desde el
+ * panel de tenant_admin.
+ */
+function buildAdminBlock(institution) {
+  const email = institution.responsible_email || institution.contact_email || null;
+  if (!email) return null;
+
+  const fullName = (institution.responsible_name || '').trim();
+  let nombre = '';
+  let apellido = '';
+  if (fullName) {
+    const firstSpace = fullName.indexOf(' ');
+    if (firstSpace === -1) {
+      nombre = fullName;
+    } else {
+      nombre = fullName.slice(0, firstSpace);
+      apellido = fullName.slice(firstSpace + 1).trim();
+    }
+  }
+  return {
+    nombre: nombre || 'Administrador',
+    apellido,
+    email,
+  };
+}
+
+/**
  * Payload base para tenant.created. Al crearse la institución en el CRM
  * aún no hay subscription/módulos — eso viaja en eventos posteriores
  * (`tenant.plan_changed` / `tenant.modules_changed`).
+ *
+ * Incluye `admin` si la institución tiene responsible_email o contact_email,
+ * para que el tenant cree el primer admin y dispare welcome email
+ * automáticamente (Fase 7 — onboarding automático).
  *
  * @param {object} institution  row de `institutions`
  * @returns {object}
  */
 function buildCreatedPayload(institution) {
-  return {
+  const payload = {
     crm_id: institution.id,
     codigo: institution.subdomain,
     nombre: institution.name,
@@ -62,6 +98,9 @@ function buildCreatedPayload(institution) {
     plan: null,
     modulos_activos: [],
   };
+  const admin = buildAdminBlock(institution);
+  if (admin) payload.admin = admin;
+  return payload;
 }
 
 function buildSuspendedPayload(institution, reason = null) {
