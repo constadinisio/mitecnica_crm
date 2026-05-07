@@ -24,11 +24,11 @@ const idRules = [
 
 const createRules = [
   body('name').isString().trim().isLength({ min: 2, max: 180 }),
-  body('contact_email').isEmail().normalizeEmail(),
+  body('contact_email').isEmail().normalizeEmail({ gmail_remove_dots: false, gmail_remove_subaddress: false }),
   body('contact_phone').optional({ nullable: true }).isString().isLength({ max: 40 }),
   body('address').optional({ nullable: true }).isString().isLength({ max: 255 }),
   body('responsible_name').optional({ nullable: true }).isString().isLength({ max: 160 }),
-  body('responsible_email').optional({ nullable: true }).isEmail().normalizeEmail(),
+  body('responsible_email').optional({ nullable: true }).isEmail().normalizeEmail({ gmail_remove_dots: false, gmail_remove_subaddress: false }),
   body('notes_internal').optional({ nullable: true }).isString().isLength({ max: 2000 }),
   body('current_plan_name').optional({ nullable: true }).isString().isLength({ max: 120 }),
   body('expiration_date').optional({ nullable: true }).isISO8601(),
@@ -41,11 +41,11 @@ const createRules = [
 const updateRules = [
   param('id').isInt({ min: 1 }).toInt(),
   body('name').optional().isString().trim().isLength({ min: 2, max: 180 }),
-  body('contact_email').optional().isEmail().normalizeEmail(),
+  body('contact_email').optional().isEmail().normalizeEmail({ gmail_remove_dots: false, gmail_remove_subaddress: false }),
   body('contact_phone').optional({ nullable: true }).isString().isLength({ max: 40 }),
   body('address').optional({ nullable: true }).isString().isLength({ max: 255 }),
   body('responsible_name').optional({ nullable: true }).isString().isLength({ max: 160 }),
-  body('responsible_email').optional({ nullable: true }).isEmail().normalizeEmail(),
+  body('responsible_email').optional({ nullable: true }).isEmail().normalizeEmail({ gmail_remove_dots: false, gmail_remove_subaddress: false }),
   body('notes_internal').optional({ nullable: true }).isString().isLength({ max: 2000 }),
   body('current_plan_name').optional({ nullable: true }).isString().isLength({ max: 120 }),
   body('expiration_date').optional({ nullable: true }).isISO8601(),

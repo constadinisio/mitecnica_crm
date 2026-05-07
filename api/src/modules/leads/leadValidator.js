@@ -30,11 +30,11 @@ const assignRules = [
 const convertRules = [
   param('id').isInt({ min: 1 }).toInt(),
   body('institution_name').optional().isString().trim().isLength({ min: 2, max: 180 }),
-  body('contact_email').optional().isEmail().normalizeEmail(),
+  body('contact_email').optional().isEmail().normalizeEmail({ gmail_remove_dots: false, gmail_remove_subaddress: false }),
   body('contact_phone').optional({ nullable: true }).isString().isLength({ max: 40 }),
   body('address').optional({ nullable: true }).isString().isLength({ max: 255 }),
   body('responsible_name').optional({ nullable: true }).isString().isLength({ max: 160 }),
-  body('responsible_email').optional({ nullable: true }).isEmail().normalizeEmail(),
+  body('responsible_email').optional({ nullable: true }).isEmail().normalizeEmail({ gmail_remove_dots: false, gmail_remove_subaddress: false }),
   body('notes_internal').optional({ nullable: true }).isString().isLength({ max: 2000 }),
   body('subdomain').optional().isString().isLength({ max: 120 }),
   body('slug').optional().isString().isLength({ max: 180 }),
