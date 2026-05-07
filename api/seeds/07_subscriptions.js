@@ -25,6 +25,11 @@ const SUBSCRIPTIONS = [
 ];
 
 exports.seed = async function seed(knex) {
+  // Demo data solo si se pide explícitamente. Sin demos no hay subscriptions sintéticas.
+  if (process.env.SEED_INCLUDE_DEMOS !== 'true') {
+    return;
+  }
+
   const institutions = await knex('institutions').select('id', 'public_code');
   const plans = await knex('plans').select('id', 'code');
   const instByCode = Object.fromEntries(institutions.map((i) => [i.public_code, i.id]));

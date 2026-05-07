@@ -95,6 +95,12 @@ const INSTITUTIONS = [
 ];
 
 exports.seed = async function seed(knex) {
+  // Demo data solo si se pide explícitamente (dev local). En staging/prod
+  // usamos la UI para crear instituciones reales y evitamos contaminar el feed.
+  if (process.env.SEED_INCLUDE_DEMOS !== 'true') {
+    return;
+  }
+
   for (const inst of INSTITUTIONS) {
     const existing = await knex('institutions').where({ public_code: inst.public_code }).first();
     if (existing) {

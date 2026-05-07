@@ -27,6 +27,11 @@ const PAYMENTS = [
 ];
 
 exports.seed = async function seed(knex) {
+  // Demo data solo si se pide explícitamente. Sin demos no hay pagos sintéticos.
+  if (process.env.SEED_INCLUDE_DEMOS !== 'true') {
+    return;
+  }
+
   const institutions = await knex('institutions').select('id', 'public_code');
   const plans = await knex('plans').select('id', 'code');
   const subscriptions = await knex('subscriptions').select('id', 'institution_id', 'plan_id');
