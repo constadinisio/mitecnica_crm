@@ -79,6 +79,7 @@ async function exportCsv(req, res, next) {
         { key: 'contact_email', header: 'contact_email' },
         { key: 'contact_phone', header: 'contact_phone' },
         { key: 'responsible_name', header: 'responsible_name' },
+        { key: 'responsible_last_name', header: 'responsible_last_name' },
         { key: 'current_plan_name', header: 'current_plan' },
         { key: 'expiration_date', header: 'expiration_date' },
         { key: 'created_at', header: 'created_at' },

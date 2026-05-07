@@ -42,6 +42,7 @@ async function getById(id) {
 async function submitPublic(payload, { ip, userAgent }) {
   const institutionName = String(payload.institution_name || '').trim();
   const contactName = String(payload.contact_name || '').trim();
+  const contactLastName = String(payload.contact_last_name || '').trim();
   const contactEmail = String(payload.contact_email || '').trim().toLowerCase();
 
   if (!institutionName) throw ApiError.badRequest('institution_name is required');
@@ -57,6 +58,7 @@ async function submitPublic(payload, { ip, userAgent }) {
   const row = await repo.create({
     institution_name: institutionName,
     contact_name: contactName,
+    contact_last_name: contactLastName || null,
     contact_email: contactEmail,
     contact_phone: payload.contact_phone || null,
     address: payload.address || null,
@@ -234,6 +236,7 @@ async function convert(id, payload, { actor, ip, userAgent }) {
       contact_phone: payload.contact_phone ?? existing.contact_phone ?? null,
       address: payload.address ?? existing.address ?? null,
       responsible_name: payload.responsible_name ?? existing.contact_name ?? null,
+      responsible_last_name: payload.responsible_last_name ?? existing.contact_last_name ?? null,
       responsible_email: payload.responsible_email ?? existing.contact_email ?? null,
       notes_internal: payload.notes_internal ?? (existing.notes ? `(Desde lead #${id}) ${existing.notes}` : `Lead #${id} convertido.`),
       current_plan_name: plan ? plan.name : null,

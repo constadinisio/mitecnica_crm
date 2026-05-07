@@ -23,7 +23,7 @@ ob_start();
 ?>
 <?php
   $title = $lead['institution_name'];
-  $subtitle = 'Solicitud #' . $id . ' · ' . $lead['contact_name'];
+  $subtitle = 'Solicitud #' . $id . ' · ' . trim(($lead['contact_name'] ?? '') . ' ' . ($lead['contact_last_name'] ?? ''));
   $breadcrumbs = [['label' => 'Dashboard', 'href' => '/dashboard'], ['label' => 'Solicitudes', 'href' => '/leads'], ['label' => '#' . $id]];
   $actionsHtml = '';
   if (!$isTerminal && can('leads.convert')) {
@@ -102,7 +102,7 @@ ob_start();
     <h3 class="text-sm font-semibold text-white mb-4">Datos de la solicitud</h3>
     <dl class="space-y-3 text-sm">
       <div><dt class="text-xs uppercase text-slate-500 tracking-wider">Institución</dt><dd class="mt-1 text-slate-100"><?= e($lead['institution_name']) ?></dd></div>
-      <div><dt class="text-xs uppercase text-slate-500 tracking-wider">Contacto</dt><dd class="mt-1 text-slate-100"><?= e($lead['contact_name']) ?></dd></div>
+      <div><dt class="text-xs uppercase text-slate-500 tracking-wider">Contacto</dt><dd class="mt-1 text-slate-100"><?= e(trim(($lead['contact_name'] ?? '') . ' ' . ($lead['contact_last_name'] ?? ''))) ?: '—' ?></dd></div>
       <div><dt class="text-xs uppercase text-slate-500 tracking-wider">Email</dt><dd class="mt-1"><a href="mailto:<?= e($lead['contact_email']) ?>" class="text-brand-300 hover:text-brand-200"><?= e($lead['contact_email']) ?></a></dd></div>
       <?php if (!empty($lead['contact_phone'])): ?>
         <div><dt class="text-xs uppercase text-slate-500 tracking-wider">Teléfono</dt><dd class="mt-1 text-slate-200"><?= e($lead['contact_phone']) ?></dd></div>

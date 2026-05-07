@@ -16,8 +16,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'contact_email'        => trim((string)($_POST['contact_email'] ?? '')),
         'contact_phone'        => trim((string)($_POST['contact_phone'] ?? '')) ?: null,
         'address'              => trim((string)($_POST['address'] ?? '')) ?: null,
-        'responsible_name'     => trim((string)($_POST['responsible_name'] ?? '')) ?: null,
-        'responsible_email'    => trim((string)($_POST['responsible_email'] ?? '')) ?: null,
+        'responsible_name'      => trim((string)($_POST['responsible_name'] ?? '')) ?: null,
+        'responsible_last_name' => trim((string)($_POST['responsible_last_name'] ?? '')) ?: null,
+        'responsible_email'     => trim((string)($_POST['responsible_email'] ?? '')) ?: null,
         'notes_internal'       => trim((string)($_POST['notes_internal'] ?? '')) ?: null,
         'institution_status'   => $_POST['institution_status'] ?? 'trial',
         'plan_id'              => isset($_POST['plan_id']) && $_POST['plan_id'] !== '' ? (int)$_POST['plan_id'] : null,
@@ -130,15 +131,22 @@ ob_start();
           ?>
         </div>
         <?php
-          $name = 'responsible_name'; $label = 'Responsable'; $type = 'text'; $required = false;
+          $name = 'responsible_name'; $label = 'Nombre del responsable'; $type = 'text'; $required = false;
           $placeholder = ''; $value = old('responsible_name', $lead['contact_name'] ?? '');
           include dirname(__DIR__, 2) . '/components/form_input.php';
         ?>
         <?php
-          $name = 'responsible_email'; $label = 'Email del responsable'; $type = 'email'; $required = false;
-          $placeholder = ''; $value = old('responsible_email', $lead['contact_email'] ?? '');
+          $name = 'responsible_last_name'; $label = 'Apellido del responsable'; $type = 'text'; $required = false;
+          $placeholder = ''; $value = old('responsible_last_name', $lead['contact_last_name'] ?? '');
           include dirname(__DIR__, 2) . '/components/form_input.php';
         ?>
+        <div class="md:col-span-2">
+          <?php
+            $name = 'responsible_email'; $label = 'Email del responsable'; $type = 'email'; $required = false;
+            $placeholder = ''; $value = old('responsible_email', $lead['contact_email'] ?? '');
+            include dirname(__DIR__, 2) . '/components/form_input.php';
+          ?>
+        </div>
       </div>
       <div class="mt-4">
         <?php

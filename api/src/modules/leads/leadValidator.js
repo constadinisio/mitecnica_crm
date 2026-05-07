@@ -34,6 +34,7 @@ const convertRules = [
   body('contact_phone').optional({ nullable: true }).isString().isLength({ max: 40 }),
   body('address').optional({ nullable: true }).isString().isLength({ max: 255 }),
   body('responsible_name').optional({ nullable: true }).isString().isLength({ max: 160 }),
+  body('responsible_last_name').optional({ nullable: true }).isString().isLength({ max: 160 }),
   body('responsible_email').optional({ nullable: true }).isEmail().normalizeEmail({ gmail_remove_dots: false, gmail_remove_subaddress: false }),
   body('notes_internal').optional({ nullable: true }).isString().isLength({ max: 2000 }),
   body('subdomain').optional().isString().isLength({ max: 120 }),

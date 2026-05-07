@@ -16,11 +16,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'contact_email'     => trim((string)($_POST['contact_email'] ?? '')),
         'contact_phone'     => trim((string)($_POST['contact_phone'] ?? '')) ?: null,
         'address'           => trim((string)($_POST['address'] ?? '')) ?: null,
-        'responsible_name'  => trim((string)($_POST['responsible_name'] ?? '')) ?: null,
-        'responsible_email' => trim((string)($_POST['responsible_email'] ?? '')) ?: null,
+        'responsible_name'      => trim((string)($_POST['responsible_name'] ?? '')) ?: null,
+        'responsible_last_name' => trim((string)($_POST['responsible_last_name'] ?? '')) ?: null,
+        'responsible_email'     => trim((string)($_POST['responsible_email'] ?? '')) ?: null,
         'notes_internal'    => trim((string)($_POST['notes_internal'] ?? '')) ?: null,
-        'current_plan_name' => trim((string)($_POST['current_plan_name'] ?? '')) ?: null,
-        'expiration_date'   => trim((string)($_POST['expiration_date'] ?? '')) ?: null,
         'status'            => $_POST['status'] ?? null,
     ];
     try {
@@ -37,11 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $institution = null;
-$availablePlans = [];
 try {
     $res = api_get("/institutions/$id");
     $institution = $res['data']['institution'] ?? null;
-    $availablePlans = api_get('/plans', ['query' => ['limit' => 100, 'status' => 'active']])['data'] ?? [];
 } catch (ApiClientException $e) {
     flash_set('error', $e->getMessage());
     redirect('/institutions');

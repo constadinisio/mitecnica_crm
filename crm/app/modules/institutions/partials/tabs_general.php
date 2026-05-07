@@ -13,7 +13,7 @@ $ins = $institution;
   <dl class="space-y-4 text-sm">
     <div><dt class="text-xs uppercase text-slate-500 tracking-wider">Email de contacto</dt><dd class="mt-1 text-slate-200"><?= e($ins['contact_email']) ?></dd></div>
     <div><dt class="text-xs uppercase text-slate-500 tracking-wider">Teléfono</dt><dd class="mt-1 text-slate-200"><?= e($ins['contact_phone'] ?? '—') ?></dd></div>
-    <div><dt class="text-xs uppercase text-slate-500 tracking-wider">Responsable</dt><dd class="mt-1 text-slate-200"><?= e($ins['responsible_name'] ?? '—') ?></dd></div>
+    <div><dt class="text-xs uppercase text-slate-500 tracking-wider">Responsable</dt><dd class="mt-1 text-slate-200"><?= e(trim(($ins['responsible_name'] ?? '') . ' ' . ($ins['responsible_last_name'] ?? ''))) ?: '—' ?></dd></div>
     <div><dt class="text-xs uppercase text-slate-500 tracking-wider">Email del responsable</dt><dd class="mt-1 text-slate-200"><?= e($ins['responsible_email'] ?? '—') ?></dd></div>
     <div><dt class="text-xs uppercase text-slate-500 tracking-wider">Creada</dt><dd class="mt-1 text-slate-300"><?= format_datetime($ins['created_at'] ?? null) ?></dd></div>
   </dl>

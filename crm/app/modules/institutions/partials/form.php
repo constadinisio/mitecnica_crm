@@ -4,12 +4,13 @@ declare(strict_types=1);
 /** Vars:
  *   string $action  (form action)
  *   array|null $institution (for edit)
- *   array|null $availablePlans (passed by create.php/edit.php for the dropdown)
  *   string $submitLabel
+ *
+ * Plan vigente + fecha de vencimiento se manejan desde la suscripción activa,
+ * no desde este form (ver tab Suscripción).
  */
 $ins = $institution ?? null;
 $isEdit = $ins !== null;
-$availablePlans = $availablePlans ?? [];
 
 $statuses = [
   'trial'        => 'Trial',
@@ -19,19 +20,6 @@ $statuses = [
   'expired'      => 'Expirada',
   'inactive'     => 'Inactiva',
 ];
-
-// Build plan options. The backend field is a free text `current_plan_name`,
-// so we use the plan NAME as both value and label. If the current saved value
-// does not match any active plan, we keep it as a selected "other" option.
-$planOptions = ['' => '— Sin plan asignado —'];
-foreach ($availablePlans as $p) {
-    $planOptions[$p['name']] = $p['name'];
-}
-$currentPlan = old_raw('current_plan_name', $ins['current_plan_name'] ?? '');
-if ($currentPlan && !isset($planOptions[$currentPlan])) {
-    // preserve legacy/custom value in the dropdown
-    $planOptions[$currentPlan] = $currentPlan . ' (personalizado)';
-}
 ?>
 <form method="post" action="<?= e($action) ?>" class="grid grid-cols-1 lg:grid-cols-3 gap-6" novalidate>
   <?= csrf_field() ?>
@@ -80,15 +68,22 @@ if ($currentPlan && !isset($planOptions[$currentPlan])) {
       <h3 class="text-sm font-semibold text-white mb-4">Responsable</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <?php
-          $name = 'responsible_name'; $label = 'Nombre del responsable'; $type = 'text'; $required = false;
-          $placeholder = 'Nombre Apellido'; $value = old('responsible_name', $ins['responsible_name'] ?? '');
+          $name = 'responsible_name'; $label = 'Nombre'; $type = 'text'; $required = false;
+          $placeholder = 'María José'; $value = old('responsible_name', $ins['responsible_name'] ?? '');
           include dirname(__DIR__, 3) . '/components/form_input.php';
         ?>
         <?php
-          $name = 'responsible_email'; $label = 'Email del responsable'; $type = 'email'; $required = false;
-          $placeholder = 'responsable@institucion.edu.ar'; $value = old('responsible_email', $ins['responsible_email'] ?? '');
+          $name = 'responsible_last_name'; $label = 'Apellido'; $type = 'text'; $required = false;
+          $placeholder = 'García López'; $value = old('responsible_last_name', $ins['responsible_last_name'] ?? '');
           include dirname(__DIR__, 3) . '/components/form_input.php';
         ?>
+        <div class="md:col-span-2">
+          <?php
+            $name = 'responsible_email'; $label = 'Email del responsable'; $type = 'email'; $required = false;
+            $placeholder = 'responsable@institucion.edu.ar'; $value = old('responsible_email', $ins['responsible_email'] ?? '');
+            include dirname(__DIR__, 3) . '/components/form_input.php';
+          ?>
+        </div>
       </div>
     </div>
 
@@ -104,26 +99,19 @@ if ($currentPlan && !isset($planOptions[$currentPlan])) {
 
   <aside class="space-y-6">
     <div class="card p-6">
-      <h3 class="text-sm font-semibold text-white mb-4">Comercial</h3>
+      <h3 class="text-sm font-semibold text-white mb-4">Estado</h3>
       <div class="space-y-4">
-        <?php
-          $name = 'current_plan_name'; $label = 'Plan actual'; $required = false;
-          $options = $planOptions; $value = $currentPlan;
-          $hint = 'Seleccioná de los planes activos del catálogo.';
-          $placeholder = null;
-          include dirname(__DIR__, 3) . '/components/form_select.php';
-          $hint = null;
-        ?>
-        <?php
-          $name = 'expiration_date'; $label = 'Fecha de vencimiento'; $type = 'date'; $required = false;
-          $placeholder = ''; $value = old('expiration_date', !empty($ins['expiration_date']) ? substr((string)$ins['expiration_date'], 0, 10) : '');
-          include dirname(__DIR__, 3) . '/components/form_input.php';
-        ?>
         <?php
           $name = 'status'; $label = 'Estado comercial'; $required = true;
           $options = $statuses; $value = old('status', $ins['status'] ?? 'trial');
           include dirname(__DIR__, 3) . '/components/form_select.php';
         ?>
+        <p class="text-xs text-slate-500">
+          El plan vigente y la fecha de vencimiento se gestionan desde la <strong class="text-slate-300">suscripción activa</strong>.
+          <?php if ($isEdit): ?>
+            <a href="/subscriptions?institution_id=<?= (int)$ins['id'] ?>" class="text-brand-300 hover:text-brand-200">Ver suscripciones →</a>
+          <?php endif; ?>
+        </p>
       </div>
     </div>
 

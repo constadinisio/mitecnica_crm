@@ -93,6 +93,7 @@ async function create(data, { actor, ip, userAgent }) {
     contact_phone: data.contact_phone || null,
     address: data.address || null,
     responsible_name: data.responsible_name || null,
+    responsible_last_name: data.responsible_last_name || null,
     responsible_email: data.responsible_email || null,
     notes_internal: data.notes_internal || null,
     current_plan_name: data.current_plan_name || null,
@@ -132,7 +133,7 @@ async function update(id, data, { actor, ip, userAgent }) {
   if (!existing) throw ApiError.notFound('Institution not found');
 
   const patch = {};
-  const editableText = ['name', 'contact_email', 'contact_phone', 'address', 'responsible_name', 'responsible_email', 'notes_internal', 'current_plan_name'];
+  const editableText = ['name', 'contact_email', 'contact_phone', 'address', 'responsible_name', 'responsible_last_name', 'responsible_email', 'notes_internal', 'current_plan_name'];
   editableText.forEach((k) => {
     if (Object.prototype.hasOwnProperty.call(data, k)) patch[k] = data[k] ?? null;
   });

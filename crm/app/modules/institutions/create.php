@@ -14,11 +14,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'contact_email'     => trim((string)($_POST['contact_email'] ?? '')),
         'contact_phone'     => trim((string)($_POST['contact_phone'] ?? '')) ?: null,
         'address'           => trim((string)($_POST['address'] ?? '')) ?: null,
-        'responsible_name'  => trim((string)($_POST['responsible_name'] ?? '')) ?: null,
-        'responsible_email' => trim((string)($_POST['responsible_email'] ?? '')) ?: null,
+        'responsible_name'      => trim((string)($_POST['responsible_name'] ?? '')) ?: null,
+        'responsible_last_name' => trim((string)($_POST['responsible_last_name'] ?? '')) ?: null,
+        'responsible_email'     => trim((string)($_POST['responsible_email'] ?? '')) ?: null,
         'notes_internal'    => trim((string)($_POST['notes_internal'] ?? '')) ?: null,
-        'current_plan_name' => trim((string)($_POST['current_plan_name'] ?? '')) ?: null,
-        'expiration_date'   => trim((string)($_POST['expiration_date'] ?? '')) ?: null,
         'status'            => $_POST['status'] ?? 'trial',
     ];
 
@@ -35,11 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('/institutions/new');
     }
 }
-
-$availablePlans = [];
-try {
-    $availablePlans = api_get('/plans', ['query' => ['limit' => 100, 'status' => 'active']])['data'] ?? [];
-} catch (Throwable) { /* silent: form still works with a custom value */ }
 
 ob_start();
 ?>

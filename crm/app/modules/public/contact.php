@@ -16,9 +16,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
 
     $body = [
-        'institution_name' => trim((string)($_POST['institution_name'] ?? '')),
-        'contact_name'     => trim((string)($_POST['contact_name'] ?? '')),
-        'contact_email'    => trim((string)($_POST['contact_email'] ?? '')),
+        'institution_name'  => trim((string)($_POST['institution_name'] ?? '')),
+        'contact_name'      => trim((string)($_POST['contact_name'] ?? '')),
+        'contact_last_name' => trim((string)($_POST['contact_last_name'] ?? '')) ?: null,
+        'contact_email'     => trim((string)($_POST['contact_email'] ?? '')),
         'contact_phone'    => trim((string)($_POST['contact_phone'] ?? '')) ?: null,
         'address'          => trim((string)($_POST['address'] ?? '')) ?: null,
         'plan_code'        => trim((string)($_POST['plan_code'] ?? '')) ?: null,
@@ -106,7 +107,12 @@ ob_start();
           ?>
           <?php
             $name = 'contact_name'; $label = 'Tu nombre'; $type = 'text'; $required = true;
-            $placeholder = 'Nombre y Apellido'; $value = old('contact_name');
+            $placeholder = 'María José'; $value = old('contact_name');
+            include dirname(__DIR__, 2) . '/components/form_input.php';
+          ?>
+          <?php
+            $name = 'contact_last_name'; $label = 'Tu apellido'; $type = 'text'; $required = false;
+            $placeholder = 'García López'; $value = old('contact_last_name');
             include dirname(__DIR__, 2) . '/components/form_input.php';
           ?>
           <?php

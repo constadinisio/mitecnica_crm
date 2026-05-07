@@ -37,7 +37,7 @@ $list = $leads ?? [];
                 <?php endif; ?>
               </td>
               <td>
-                <div class="text-slate-200 text-sm"><?= e($l['contact_name']) ?></div>
+                <div class="text-slate-200 text-sm"><?= e(trim(($l['contact_name'] ?? '') . ' ' . ($l['contact_last_name'] ?? ''))) ?></div>
                 <div class="text-xs text-slate-500"><?= e($l['contact_email']) ?><?= !empty($l['contact_phone']) ? ' · ' . e($l['contact_phone']) : '' ?></div>
               </td>
               <td class="text-slate-300"><?= e($l['plan_code_requested'] ?? '—') ?></td>

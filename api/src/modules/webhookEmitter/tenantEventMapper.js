@@ -47,8 +47,13 @@ function mapInstitutionStatusChange(oldStatus, newStatus) {
 
 /**
  * Si la institución tiene responsible_email (o contact_email como fallback),
- * extrae nombre/apellido del `responsible_name` y arma el bloque `admin` que
- * el tenant usa para crear el primer usuario admin + welcome email.
+ * arma el bloque `admin` que el tenant usa para crear el primer usuario admin
+ * + welcome email.
+ *
+ * Prefiere los campos separados `responsible_name` / `responsible_last_name`
+ * (introducidos 2026-05-07). Si solo hay un string single-field legacy, hace
+ * un split best-effort por el primer espacio — esto falla con nombres
+ * compuestos pero solo aplica a registros pre-migración.
  *
  * Devuelve null si no hay email aprovechable; en ese caso el tenant queda
  * provisionado sin admin y el operador puede crearlo manualmente desde el
@@ -58,18 +63,18 @@ function buildAdminBlock(institution) {
   const email = institution.responsible_email || institution.contact_email || null;
   if (!email) return null;
 
-  const fullName = (institution.responsible_name || '').trim();
-  let nombre = '';
-  let apellido = '';
-  if (fullName) {
-    const firstSpace = fullName.indexOf(' ');
-    if (firstSpace === -1) {
-      nombre = fullName;
-    } else {
-      nombre = fullName.slice(0, firstSpace);
-      apellido = fullName.slice(firstSpace + 1).trim();
+  let nombre = (institution.responsible_name || '').trim();
+  let apellido = (institution.responsible_last_name || '').trim();
+
+  // Fallback legacy: si no hay last_name pero el name trae espacio, splitteamos.
+  if (!apellido && nombre) {
+    const firstSpace = nombre.indexOf(' ');
+    if (firstSpace !== -1) {
+      apellido = nombre.slice(firstSpace + 1).trim();
+      nombre = nombre.slice(0, firstSpace);
     }
   }
+
   return {
     nombre: nombre || 'Administrador',
     apellido,

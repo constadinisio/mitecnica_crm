@@ -27,6 +27,7 @@ function applyFilters(query, f = {}) {
     query.where((qb) => {
       qb.whereRaw('LOWER(contact_requests.institution_name) LIKE ?', [s])
         .orWhereRaw('LOWER(contact_requests.contact_name) LIKE ?', [s])
+        .orWhereRaw('LOWER(COALESCE(contact_requests.contact_last_name, \'\')) LIKE ?', [s])
         .orWhereRaw('LOWER(contact_requests.contact_email) LIKE ?', [s]);
     });
   }
