@@ -100,8 +100,13 @@ ob_start();
   </div>
   <div class="card p-5">
     <div class="text-xs uppercase tracking-wider text-slate-500">Última actividad</div>
-    <div class="mt-2 text-lg font-semibold text-white"><?= e(format_relative($institution['last_activity_at'] ?? null)) ?></div>
-    <div class="text-xs text-slate-500 mt-1"><?= e(format_datetime($institution['last_activity_at'] ?? null)) ?></div>
+    <?php if (!empty($institution['last_activity_at'])): ?>
+      <div class="mt-2 text-lg font-semibold text-white"><?= e(format_relative($institution['last_activity_at'])) ?></div>
+      <div class="text-xs text-slate-500 mt-1"><?= e(format_datetime($institution['last_activity_at'])) ?></div>
+    <?php else: ?>
+      <div class="mt-2 text-lg font-semibold text-slate-400">Sin actividad registrada</div>
+      <div class="text-xs text-slate-500 mt-1">El tenant todavía no reportó ningún login.</div>
+    <?php endif; ?>
   </div>
 </section>
 

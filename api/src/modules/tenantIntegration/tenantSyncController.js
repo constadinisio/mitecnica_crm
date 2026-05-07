@@ -1,6 +1,7 @@
 'use strict';
 
 const apiResponse = require('../../utils/apiResponse');
+const ApiError = require('../../utils/ApiError');
 const service = require('./tenantSyncService');
 
 async function listFeed(req, res, next) {
@@ -19,4 +20,16 @@ async function listFeed(req, res, next) {
   }
 }
 
-module.exports = { listFeed };
+async function recordActivity(req, res, next) {
+  try {
+    const { subdomain, at } = req.body || {};
+    const result = await service.recordActivity(subdomain, at);
+    return apiResponse.success(res, result);
+  } catch (err) {
+    if (err.status === 400) return next(ApiError.badRequest(err.message));
+    if (err.status === 404) return next(ApiError.notFound(err.message));
+    return next(err);
+  }
+}
+
+module.exports = { listFeed, recordActivity };

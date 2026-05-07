@@ -108,8 +108,52 @@ function decodeCursor(cursor) {
   }
 }
 
+/**
+ * Heartbeat de actividad: el tenant nos avisa cuándo fue el último login en
+ * su instalación, así el CRM puede mostrar "última actividad" sin tener que
+ * leer la BD del tenant. Hace UPDATE idempotente: solo escribe si el timestamp
+ * provisto es más reciente que el guardado.
+ *
+ * @param {string} subdomain  subdomain del tenant (matcheo por institutions.subdomain)
+ * @param {string|Date} at    timestamp del último login
+ * @returns {Promise<{updated: boolean, last_activity_at: string|null}>}
+ */
+async function recordActivity(subdomain, at) {
+  if (!subdomain) {
+    const err = new Error('subdomain is required');
+    err.status = 400;
+    throw err;
+  }
+  const ts = at ? new Date(at) : new Date();
+  if (Number.isNaN(ts.getTime())) {
+    const err = new Error('at must be a valid timestamp');
+    err.status = 400;
+    throw err;
+  }
+
+  const institution = await db('institutions').where({ subdomain }).first();
+  if (!institution) {
+    const err = new Error(`institution not found for subdomain "${subdomain}"`);
+    err.status = 404;
+    throw err;
+  }
+
+  // Solo actualizar si es más reciente. Evita race conditions y reduce escrituras.
+  const current = institution.last_activity_at ? new Date(institution.last_activity_at) : null;
+  if (current && current >= ts) {
+    return { updated: false, last_activity_at: current.toISOString() };
+  }
+
+  await db('institutions')
+    .where({ id: institution.id })
+    .update({ last_activity_at: ts.toISOString() });
+
+  return { updated: true, last_activity_at: ts.toISOString() };
+}
+
 module.exports = {
   listFeed,
+  recordActivity,
   MAX_LIMIT,
   DEFAULT_LIMIT,
   // expuestos para tests

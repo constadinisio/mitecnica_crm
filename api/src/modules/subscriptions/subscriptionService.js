@@ -51,6 +51,37 @@ async function ensureNoLiveConflict({ institutionId, excludeId = null, desiredSt
 }
 
 /**
+ * Sincroniza los campos cacheados `institutions.current_plan_name` y
+ * `institutions.expiration_date` con la suscripción LIVE más reciente.
+ *
+ * Estos campos los seguimos manteniendo para que el listado de instituciones
+ * y el CSV puedan filtrar/mostrar el plan sin joinear contra subscriptions.
+ * El form de Institución ya no los edita (se quitaron 2026-05-07): la única
+ * fuente de verdad es la suscripción, y esto hace fan-out hacia el cache.
+ */
+async function syncInstitutionLicenseSummary(institutionId) {
+  try {
+    const live = await repo.findLiveForInstitution(institutionId);
+    let planName = null;
+    let expirationDate = null;
+    if (live) {
+      const plan = await plansRepo.findById(live.plan_id);
+      planName = plan ? plan.name : null;
+      expirationDate = live.end_date || null;
+    }
+    await institutionsRepo.update(institutionId, {
+      current_plan_name: planName,
+      expiration_date: expirationDate,
+    });
+  } catch (err) {
+    logger.error(
+      '[subscriptionService] syncInstitutionLicenseSummary falló para institution=%d: %s',
+      institutionId, err.message
+    );
+  }
+}
+
+/**
  * Notifica al tenant que cambió el plan y/o los módulos efectivos. Lo usamos
  * tanto al crear/actualizar suscripción como al cambiar status. Encolamos dos
  * eventos separados porque del lado mitecnica son dos campos distintos en
@@ -122,6 +153,8 @@ async function create(data, { actor, ip, userAgent }) {
     afterData: row, ip, userAgent,
   });
 
+  await syncInstitutionLicenseSummary(row.institution_id);
+
   // Si la suscripción nació "live" (trial|active), ya cambia lo que el tenant ve.
   if (LIVE_STATUSES.includes(status)) {
     await emitPlanAndModulesChanged(row.institution_id);
@@ -159,6 +192,12 @@ async function update(id, data, { actor, ip, userAgent }) {
     beforeData: existing, afterData: row, ip, userAgent,
   });
 
+  // Sincronizar el cache de licencia en la institution si cambió algo que afecte
+  // al plan vigente o la fecha de vencimiento.
+  if (patch.plan_id || patch.status || patch.end_date !== undefined) {
+    await syncInstitutionLicenseSummary(row.institution_id);
+  }
+
   // Si cambió el plan o si el status cambió de/hacia "live", los módulos
   // efectivos pueden haber cambiado → notificar.
   const planChanged = patch.plan_id && patch.plan_id !== existing.plan_id;
@@ -187,6 +226,9 @@ async function changeStatus(id, newStatus, { actor, ip, userAgent, reason = null
     afterData: { status: newStatus, reason },
     ip, userAgent,
   });
+
+  // Sincronizar cache de plan/vencimiento en la institution.
+  await syncInstitutionLicenseSummary(existing.institution_id);
 
   // Un cambio de status puede pasar la subscription de "live" a "no live" o viceversa,
   // lo que altera el plan/módulos efectivos del lado tenant.
