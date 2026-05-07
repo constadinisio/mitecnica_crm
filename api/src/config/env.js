@@ -57,7 +57,11 @@ const env = {
   integration: {
     tenantWebhookUrl: process.env.TENANT_WEBHOOK_URL || '',
     crmWebhookSecret: process.env.CRM_WEBHOOK_SECRET || '',
-    mitecnicaSyncApiKey: process.env.MITECNICA_SYNC_API_KEY || '',
+    // Preferimos `CRM_SYNC_API_KEY` (nombre alineado con el lado tenant para que
+    // ambos `.env` usen idéntica variable). Mantenemos `MITECNICA_SYNC_API_KEY`
+    // como fallback histórico hasta deprecarlo.
+    mitecnicaSyncApiKey:
+      process.env.CRM_SYNC_API_KEY || process.env.MITECNICA_SYNC_API_KEY || '',
     webhookDispatcherEnabled: bool(process.env.WEBHOOK_DISPATCHER_ENABLED, true),
     webhookDispatcherIntervalMs: toInt(process.env.WEBHOOK_DISPATCHER_INTERVAL_MS, 30000),
     webhookHttpTimeoutMs: toInt(process.env.WEBHOOK_HTTP_TIMEOUT_MS, 10000),
